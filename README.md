@@ -1,4 +1,4 @@
-# eee4482_flutter_app1
+# eee4482_flutter_app
 
 A new Flutter project.
 
