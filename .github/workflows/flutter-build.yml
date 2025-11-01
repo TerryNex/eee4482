@@ -23,6 +23,11 @@ jobs:
     name: Build Flutter App for ${{ github.event.inputs.platform }}
     runs-on: ${{ (github.event.inputs.platform == 'macos' && 'macos-latest') || (github.event.inputs.platform == 'windows' && 'windows-latest') || 'ubuntu-latest' }}
     
+    # Set explicit permissions for security best practices
+    permissions:
+      contents: read
+      actions: read
+    
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
