@@ -89,3 +89,4 @@ echo "  Linux:  flutter build linux --release"
 echo "  macOS:  flutter build macos --release"
 echo ""
 echo "Happy coding! 🚀"
+
