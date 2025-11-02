@@ -1,0 +1,331 @@
+/// Settings Page
+/// Allows users to configure API settings, proxy settings, and themes
+/// Student: HE HUALIANG (230263367)
+
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../widgets/navigation_frame.dart';
+import '../themes/theme_provider.dart';
+import '../themes/app_themes.dart';
+import '../config/settings_provider.dart';
+
+class SettingsPage extends StatefulWidget {
+  const SettingsPage({super.key});
+
+  @override
+  State<SettingsPage> createState() => _SettingsPageState();
+}
+
+class _SettingsPageState extends State<SettingsPage> {
+  final TextEditingController _apiUrlController = TextEditingController();
+  final TextEditingController _proxyHostController = TextEditingController();
+  final TextEditingController _proxyPortController = TextEditingController();
+  
+  bool _useProxy = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
+      _apiUrlController.text = settingsProvider.apiBaseUrl;
+      _useProxy = settingsProvider.useProxy;
+      _proxyHostController.text = settingsProvider.proxyHost;
+      _proxyPortController.text = settingsProvider.proxyPort.toString();
+    });
+  }
+
+  @override
+  void dispose() {
+    _apiUrlController.dispose();
+    _proxyHostController.dispose();
+    _proxyPortController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return NavigationFrame(
+      selectedIndex: 3,
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(20),
+        child: Container(
+          constraints: const BoxConstraints(maxWidth: 800),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Settings',
+                style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 30),
+              _buildThemeSection(),
+              const SizedBox(height: 30),
+              _buildApiSection(),
+              const SizedBox(height: 30),
+              _buildProxySection(),
+              const SizedBox(height: 30),
+              _buildActionButtons(),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildThemeSection() {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Theme',
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 10),
+            const Text(
+              'Choose your preferred UI theme',
+              style: TextStyle(fontSize: 14, color: Colors.grey),
+            ),
+            const SizedBox(height: 20),
+            Consumer<ThemeProvider>(
+              builder: (context, themeProvider, child) {
+                return Wrap(
+                  spacing: 10,
+                  runSpacing: 10,
+                  children: ThemeType.values.map((themeType) {
+                    final isSelected = themeProvider.currentTheme == themeType;
+                    return ChoiceChip(
+                      label: Text(AppThemes.getThemeName(themeType)),
+                      selected: isSelected,
+                      onSelected: (selected) {
+                        if (selected) {
+                          themeProvider.setTheme(themeType);
+                        }
+                      },
+                    );
+                  }).toList(),
+                );
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildApiSection() {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'API Configuration',
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 10),
+            const Text(
+              'Configure the backend API endpoint',
+              style: TextStyle(fontSize: 14, color: Colors.grey),
+            ),
+            const SizedBox(height: 20),
+            TextField(
+              controller: _apiUrlController,
+              decoration: const InputDecoration(
+                labelText: 'API Base URL',
+                hintText: 'http://192.168.1.100/api/public',
+                border: OutlineInputBorder(),
+                prefixIcon: Icon(Icons.cloud),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildProxySection() {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Proxy Configuration',
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 10),
+            const Text(
+              'Configure proxy settings for network requests',
+              style: TextStyle(fontSize: 14, color: Colors.grey),
+            ),
+            const SizedBox(height: 20),
+            SwitchListTile(
+              title: const Text('Use Proxy'),
+              subtitle: const Text('Enable proxy for API requests'),
+              value: _useProxy,
+              onChanged: (value) {
+                setState(() {
+                  _useProxy = value;
+                });
+              },
+            ),
+            if (_useProxy) ...[
+              const SizedBox(height: 10),
+              TextField(
+                controller: _proxyHostController,
+                decoration: const InputDecoration(
+                  labelText: 'Proxy Host',
+                  hintText: 'localhost',
+                  border: OutlineInputBorder(),
+                  prefixIcon: Icon(Icons.dns),
+                ),
+              ),
+              const SizedBox(height: 10),
+              TextField(
+                controller: _proxyPortController,
+                decoration: const InputDecoration(
+                  labelText: 'Proxy Port',
+                  hintText: '8080',
+                  border: OutlineInputBorder(),
+                  prefixIcon: Icon(Icons.settings_input_component),
+                ),
+                keyboardType: TextInputType.number,
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildActionButtons() {
+    return Row(
+      children: [
+        Expanded(
+          child: ElevatedButton(
+            onPressed: _saveSettings,
+            style: ElevatedButton.styleFrom(
+              padding: const EdgeInsets.symmetric(vertical: 16),
+            ),
+            child: const Text('Save Settings'),
+          ),
+        ),
+        const SizedBox(width: 10),
+        OutlinedButton(
+          onPressed: _resetSettings,
+          style: OutlinedButton.styleFrom(
+            padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
+          ),
+          child: const Text('Reset to Defaults'),
+        ),
+      ],
+    );
+  }
+
+  void _saveSettings() async {
+    final settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
+
+    // Validate inputs
+    if (_apiUrlController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('API URL cannot be empty'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    if (_useProxy) {
+      if (_proxyHostController.text.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Proxy host cannot be empty when proxy is enabled'),
+            backgroundColor: Colors.red,
+          ),
+        );
+        return;
+      }
+
+      final port = int.tryParse(_proxyPortController.text);
+      if (port == null || port < 1 || port > 65535) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Invalid proxy port number'),
+            backgroundColor: Colors.red,
+          ),
+        );
+        return;
+      }
+    }
+
+    // Save settings
+    await settingsProvider.setApiBaseUrl(_apiUrlController.text);
+    await settingsProvider.setProxyConfig(
+      enabled: _useProxy,
+      host: _proxyHostController.text,
+      port: int.tryParse(_proxyPortController.text) ?? 8080,
+    );
+
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Settings saved successfully'),
+          backgroundColor: Colors.green,
+        ),
+      );
+    }
+  }
+
+  void _resetSettings() async {
+    final settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
+    final themeProvider = Provider.of<ThemeProvider>(context, listen: false);
+
+    // Show confirmation dialog
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Reset Settings'),
+        content: const Text('Are you sure you want to reset all settings to defaults?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('Reset'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      await settingsProvider.resetToDefaults();
+      await themeProvider.setTheme(ThemeType.defaultTheme);
+
+      // Update form fields
+      setState(() {
+        _apiUrlController.text = settingsProvider.apiBaseUrl;
+        _useProxy = settingsProvider.useProxy;
+        _proxyHostController.text = settingsProvider.proxyHost;
+        _proxyPortController.text = settingsProvider.proxyPort.toString();
+      });
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Settings reset to defaults'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    }
+  }
+}
