@@ -13,6 +13,7 @@ import 'pages/booklist_page.dart';
 import 'pages/settings_page.dart';
 import 'pages/login_page.dart';
 import 'pages/register_page.dart';
+import 'pages/change_password_page.dart';
 import 'themes/theme_provider.dart';
 import 'config/settings_provider.dart';
 import 'providers/auth_provider.dart';
@@ -52,6 +53,7 @@ class App extends StatelessWidget {
             '/add': (context) => AddBookPage(),
             '/booklist': (context) => BooklistPage(),
             '/settings': (context) => const SettingsPage(),
+            '/change-password': (context) => const ChangePasswordPage(),
           },
           // Use theme from provider
           theme: themeProvider.themeData,
