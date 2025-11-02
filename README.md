@@ -480,13 +480,34 @@ sudo apt-get install -y clang cmake ninja-build pkg-config libgtk-3-dev liblzma-
 
 ## ⚙️ Configuration (NEW in V1.1)
 
+### Quick Configuration Guide
+
+The e-Library application supports multiple configuration methods to suit different deployment scenarios.
+
+📖 **For detailed configuration instructions, see [Configuration Guide](docs/CONFIGURATION_GUIDE.md)**
+
 ### API Configuration
 
-Configure your backend API server in the Settings page or programmatically:
+Configure your backend API server through multiple methods:
 
+#### Method 1: Settings UI (Recommended for Users)
+1. Navigate to Settings page (gear icon)
+2. Update "API Base URL" field
+3. Click "Save Settings"
+
+#### Method 2: Code Configuration (For Developers)
 ```dart
 // In lib/config/api_config.dart
 ApiConfig.baseUrl = 'http://your-server-ip/api/public';
+```
+
+#### Method 3: Database Configuration (For Server Deployments)
+```sql
+-- Import database schema
+mysql -u root -p < database/schema.sql
+
+-- Update API settings
+CALL update_api_setting('base_url', 'http://your-server-ip/api/public', 'API Base URL');
 ```
 
 **Default API Base URL**: `http://192.168.1.100/api/public`
@@ -495,15 +516,23 @@ ApiConfig.baseUrl = 'http://your-server-ip/api/public';
 
 For development or corporate networks requiring a proxy:
 
+#### Using Settings UI:
 1. Navigate to Settings page (gear icon)
 2. Enable "Use Proxy"
 3. Enter proxy host and port
 4. Click "Save Settings"
 
+#### Using Database:
+```sql
+CALL update_proxy_config('development', TRUE, 'localhost', 8080, 'http');
+```
+
 **Use Cases:**
 - CORS bypass during development
 - Corporate network proxy requirements
 - Testing with different network configurations
+
+**Note:** Settings persist across sessions using browser local storage (SharedPreferences). For multi-user or centrally-managed configurations, use the database persistence option.
 
 ### Theme Selection
 
@@ -517,6 +546,23 @@ Choose your preferred UI theme:
    - **Xcode**: Light theme, macOS style
 3. Theme applies immediately and persists across sessions
 
+### Configuration Persistence
+
+The application supports two persistence methods:
+
+1. **Local Storage (Default)**: Settings saved in browser/device storage
+   - ✅ Works offline
+   - ✅ User-specific settings
+   - ❌ Not shared across devices
+
+2. **Database Persistence (Optional)**: Settings stored in MariaDB/MySQL
+   - ✅ Centralized management
+   - ✅ Shared across all users
+   - ✅ Can be backed up
+   - Requires backend API integration
+
+See [Configuration Guide](docs/CONFIGURATION_GUIDE.md) for database setup instructions.
+
 ### API Endpoints
 
 The application uses the following endpoints:
@@ -526,7 +572,19 @@ The application uses the following endpoints:
 - `PUT /books/update/:id` - Update a book
 - `DELETE /books/delete/:id` - Delete a book
 
-For detailed API documentation, see `docs/API_PROXY_VALIDATION_GUIDE.md`
+### Configuration Documentation
+
+For comprehensive configuration instructions:
+- **[Configuration Guide](docs/CONFIGURATION_GUIDE.md)** - Complete setup instructions
+  - API configuration (UI, code, and database methods)
+  - Proxy configuration and setup
+  - Local server settings
+  - Database schema and setup
+  - Common configuration scenarios
+  - Troubleshooting guide
+- **[API & Proxy Guide](docs/API_PROXY_VALIDATION_GUIDE.md)** - API usage and proxy details
+- **[Database Schema](database/schema.sql)** - MariaDB/MySQL schema for persistent configuration
+- **[SQL Examples](database/examples.sql)** - Common SQL configuration examples
 
 ---
 
