@@ -5,6 +5,68 @@ All notable changes to the EEE4482 e-Library project will be documented in this 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [V1.2] - 2025-11-02
+
+### Added - Database Persistence and Configuration Documentation
+
+- 🗄️ **Database Schema**:
+  - MariaDB/MySQL schema for persistent configuration storage
+  - Tables: `api_settings`, `proxy_config`, `user_settings`
+  - Views: `active_api_settings`, `active_proxy_config`
+  - Stored procedures: `update_api_setting`, `update_proxy_config`, `get_current_api_config`, `get_current_proxy_config`
+  - Default configurations and sample data
+- 📝 **SQL Examples**:
+  - 17 common configuration scenarios
+  - Backup and restore examples
+  - Query and monitoring examples
+  - Validation and cleanup scripts
+- 📖 **Configuration Guide** (`docs/CONFIGURATION_GUIDE.md`):
+  - Comprehensive 937-line guide covering all configuration methods
+  - UI-based configuration (Settings page)
+  - Code-based configuration (hardcoded defaults)
+  - Database-based configuration (server-managed)
+  - Local server settings modification guide
+  - Database setup and integration instructions
+  - 17 common configuration scenarios with examples
+  - Comprehensive troubleshooting section
+- 📚 **Database Documentation** (`database/README.md`):
+  - Quick start guide for database setup
+  - Schema documentation with table details
+  - Backend API integration examples (PHP)
+  - Security best practices
+  - Backup and restore procedures
+  - Monitoring and maintenance instructions
+- 🔒 **Security Enhancements**:
+  - .gitignore entries for database backups and sensitive files
+  - Password encryption examples
+  - User privilege management examples
+- 📋 **Documentation Updates**:
+  - Updated README.md with configuration persistence options
+  - Updated QUICKSTART.md with configuration references
+  - Added links to all new documentation
+
+### Key Features
+
+- **Dual Persistence Options**:
+  - Local storage (SharedPreferences) - Default, works offline
+  - Database persistence (MariaDB/MySQL) - Optional, for server-managed deployments
+- **Flexible Configuration**:
+  - Configure via UI (Settings page)
+  - Configure via code (`lib/config/api_config.dart`)
+  - Configure via database (SQL queries and stored procedures)
+- **Production Ready**:
+  - Complete backup and restore procedures
+  - Security considerations documented
+  - Monitoring and auditing queries included
+
+### Technical Details
+
+- Database schema supports multiple environments (development, staging, production)
+- Stored procedures for efficient configuration management
+- Views for easy access to active configurations
+- JSON output support for API integration
+- Comprehensive error handling and validation
+
 ## [V1.1] - 2025-11-02
 
 ### Added - API, Proxy, Validation & Themes
