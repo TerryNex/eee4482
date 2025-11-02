@@ -341,7 +341,7 @@ class _UserDashboardPageState extends State<UserDashboardPage> {
   }
 
   Widget _buildBookCard(Map<String, dynamic> book) {
-    final hasStatus tag = book['status'] == 'available';
+    final hasStatus = book['status'] == 'available';
     final firstLetter = book['title'][0].toUpperCase();
     
     return Card(
