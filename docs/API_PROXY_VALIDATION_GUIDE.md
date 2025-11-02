@@ -152,6 +152,13 @@ The application supports proxy configuration for different network scenarios:
 - **Corporate Proxy**: For enterprise networks requiring proxy
 - **Dynamic Configuration**: Change proxy settings at runtime
 
+**Important Note**: The current implementation provides proxy configuration UI and settings persistence. However, Flutter's standard `http` package has limited proxy support. For production use with proxy:
+- **Web**: Proxy is automatically handled by the browser
+- **Desktop/Mobile**: System-level proxy settings are used
+- **Advanced scenarios**: Consider using packages like `dio` which have better proxy support
+
+The proxy settings are stored and can be used by custom HTTP client implementations.
+
 ### Configuration
 
 #### Via Settings UI

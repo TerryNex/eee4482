@@ -118,7 +118,7 @@ class Validators {
     if (cleanIsbn.length == 10) {
       final isbn10Regex = RegExp(r'^\d{9}[\dXx]$');
       if (!isbn10Regex.hasMatch(cleanIsbn)) {
-        return 'Invalid ISBN-10 format. Expected: XXX-X-XXXX-XXXX-X';
+        return 'Invalid ISBN-10 format. Expected: X-XXX-XXXXX-X';
       }
       return null;
     }
@@ -127,7 +127,7 @@ class Validators {
     if (cleanIsbn.length == 13) {
       final isbn13Regex = RegExp(r'^\d{13}$');
       if (!isbn13Regex.hasMatch(cleanIsbn)) {
-        return 'Invalid ISBN-13 format. Expected: XXX-X-XXXX-XXXX-X';
+        return 'Invalid ISBN-13 format. Expected: XXX-X-XX-XXXXXX-X';
       }
       return null;
     }

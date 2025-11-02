@@ -29,13 +29,18 @@ class ApiException implements Exception {
 /// API Service class with comprehensive error handling
 class ApiService {
   /// HTTP Client with proxy support
+  /// Note: Flutter's http package doesn't directly support proxy configuration.
+  /// For production use with proxy, consider:
+  /// 1. Using a custom HttpClient with proxy settings
+  /// 2. Using dio package which has better proxy support
+  /// 3. Configuring system-level proxy
+  /// This implementation returns a standard client as proxy configuration
+  /// would require platform-specific implementations.
   static http.Client _getClient() {
-    final proxyUrl = ApiConfig.getProxyUrl();
-    if (proxyUrl != null) {
-      // Note: For production, use a proper proxy implementation
-      // This is a simplified version for demonstration
-      return http.Client();
-    }
+    // For future enhancement: implement platform-specific proxy support
+    // Web: Proxy is handled by browser
+    // Mobile: Use system proxy settings
+    // Desktop: Configure HttpClient with proxy
     return http.Client();
   }
 

@@ -3,10 +3,13 @@
 /// Student: HE HUALIANG (230263367)
 
 class ApiConfig {
-  // Base API URL - Update this with your server IP
+  // Base API URL - This should be configured via Settings page or environment variables
+  // Default value is provided for initial setup only
+  // TODO: Replace with your actual server IP or use environment variables
   static const String baseUrl = 'http://192.168.1.100/api/public';
   
-  // Proxy settings
+  // Proxy settings - mutable for runtime configuration
+  // These are managed by SettingsProvider for persistence
   static bool useProxy = false;
   static String proxyHost = '';
   static int proxyPort = 8080;
