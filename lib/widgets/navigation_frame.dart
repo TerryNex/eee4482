@@ -109,12 +109,15 @@ class _NavigationFrameState extends State<NavigationFrame> {
                         Navigator.pushNamed(context, '/home');
                         break;
                       case 1:
-                        Navigator.pushNamed(context, '/add');
+                        Navigator.pushNamed(context, '/dashboard');
                         break;
                       case 2:
-                        Navigator.pushNamed(context, '/booklist');
+                        Navigator.pushNamed(context, '/add');
                         break;
                       case 3:
+                        Navigator.pushNamed(context, '/booklist');
+                        break;
+                      case 4:
                         Navigator.pushNamed(context, '/settings');
                         break;
                       default:
@@ -127,6 +130,11 @@ class _NavigationFrameState extends State<NavigationFrame> {
                     icon: Icon(Icons.home_outlined),
                     label: Text('Home'),
                     selectedIcon: Icon(Icons.home),
+                  ),
+                  NavigationRailDestination(
+                    icon: Icon(Icons.dashboard_outlined),
+                    label: Text('Dashboard'),
+                    selectedIcon: Icon(Icons.dashboard),
                   ),
                   NavigationRailDestination(
                     icon: Icon(Icons.my_library_add_outlined),

@@ -14,6 +14,7 @@ import 'pages/settings_page.dart';
 import 'pages/login_page.dart';
 import 'pages/register_page.dart';
 import 'pages/change_password_page.dart';
+import 'pages/user_dashboard_page.dart';
 import 'themes/theme_provider.dart';
 import 'config/settings_provider.dart';
 import 'providers/auth_provider.dart';
@@ -50,6 +51,7 @@ class App extends StatelessWidget {
             '/login': (context) => const LoginPage(),
             '/register': (context) => const RegisterPage(),
             '/home': (context) => HomePage(),
+            '/dashboard': (context) => const UserDashboardPage(),
             '/add': (context) => AddBookPage(),
             '/booklist': (context) => BooklistPage(),
             '/settings': (context) => const SettingsPage(),
