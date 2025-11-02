@@ -1,11 +1,19 @@
 # EEE4482 e-Library Flutter Application
 
-**Version:** V1.0  
+**Version:** V1.1  
 **Student:** HE HUALIANG  
 **Student ID:** 230263367  
 **Course:** EEE 4482 - Server Installation and Programming
 
 A multi-platform Flutter application for managing an e-library system with support for Web, Linux, macOS, and Windows platforms.
+
+**✨ New in V1.1:**
+- 🌐 Robust API calls with error handling and timeout settings
+- 🔒 Authentication support with Bearer tokens
+- 🔄 Dynamic proxy configuration for different network scenarios
+- ✅ Comprehensive input validation (frontend + backend)
+- 🎨 Multiple UI themes (GitHub High Contrast, JetBrains IDE, Xcode)
+- ⚙️ Settings page for API, proxy, and theme configuration
 
 ---
 
@@ -33,12 +41,36 @@ This Flutter application is an e-library management system developed as part of 
 
 ## ✨ Features
 
-- **Book Management**: Browse, add, and manage books in the library
-- **User Interface**: Modern, responsive Material Design 3 UI
-- **Multi-Platform Support**: Build for Web, Linux, macOS, or Windows
-- **API Integration**: RESTful API integration with backend server
-- **CORS Proxy**: Development proxy server for handling CORS issues
+### Core Functionality
+- **Book Management**: Browse, add, update, and delete books in the library
+- **API Integration**: Full RESTful API integration with backend server
 - **Student Information**: Displays borrower information (HE HUALIANG - 230263367)
+
+### API & Network (NEW in V1.1)
+- **Robust API Calls**: Comprehensive error handling with timeout settings
+- **Authentication**: Bearer token authentication support
+- **Proxy Support**: Configurable proxy for development and corporate networks
+- **Error Recovery**: Graceful error handling with user-friendly messages
+
+### Input Validation (NEW in V1.1)
+- **Real-time Validation**: Immediate feedback on form inputs
+- **Comprehensive Rules**: Email, ISBN, date, and custom format validation
+- **Clear Error Messages**: Specific, actionable error descriptions
+- **Frontend + Backend**: Validation at both application layers
+
+### UI & Theming (NEW in V1.1)
+- **Multiple Themes**: Choose from 4 professional themes:
+  - Default (Material Design 3)
+  - GitHub High Contrast (Dark, accessibility-focused)
+  - JetBrains IDE (Darcula theme)
+  - Xcode (macOS developer tools style)
+- **Theme Persistence**: Your choice is saved across sessions
+- **Instant Switching**: Change themes without restarting
+
+### Platform Support
+- **Multi-Platform**: Build for Web, Linux, macOS, or Windows
+- **Responsive Design**: Adapts to different screen sizes
+- **Cross-platform Consistency**: Same features on all platforms
 
 ---
 
@@ -446,35 +478,100 @@ sudo apt-get install -y clang cmake ninja-build pkg-config libgtk-3-dev liblzma-
 
 ---
 
+## ⚙️ Configuration (NEW in V1.1)
+
+### API Configuration
+
+Configure your backend API server in the Settings page or programmatically:
+
+```dart
+// In lib/config/api_config.dart
+ApiConfig.baseUrl = 'http://your-server-ip/api/public';
+```
+
+**Default API Base URL**: `http://192.168.1.100/api/public`
+
+### Proxy Configuration
+
+For development or corporate networks requiring a proxy:
+
+1. Navigate to Settings page (gear icon)
+2. Enable "Use Proxy"
+3. Enter proxy host and port
+4. Click "Save Settings"
+
+**Use Cases:**
+- CORS bypass during development
+- Corporate network proxy requirements
+- Testing with different network configurations
+
+### Theme Selection
+
+Choose your preferred UI theme:
+
+1. Go to Settings page
+2. Select from available themes:
+   - **Default**: Material Design 3 with warm colors
+   - **GitHub High Contrast**: Dark theme, high accessibility
+   - **JetBrains IDE**: Darcula theme for developers
+   - **Xcode**: Light theme, macOS style
+3. Theme applies immediately and persists across sessions
+
+### API Endpoints
+
+The application uses the following endpoints:
+
+- `GET /books` - Fetch all books
+- `POST /books/add` - Add a new book
+- `PUT /books/update/:id` - Update a book
+- `DELETE /books/delete/:id` - Delete a book
+
+For detailed API documentation, see `docs/API_PROXY_VALIDATION_GUIDE.md`
+
+---
+
 ## 📁 Project Structure
 
 ```
 eee4482/
 ├── .github/
 │   └── workflows/
-│       └── flutter-build.yml      # CI/CD workflow for multi-platform builds
-├── docs/                          # Project documentation and worksheets
-│   ├── Worksheet7g_v1.3.docx     # Main project requirements
+│       └── flutter-build.yml          # CI/CD workflow for multi-platform builds
+├── docs/                              # Project documentation and worksheets
+│   ├── Worksheet7g_v1.3.docx         # Main project requirements
+│   ├── API_PROXY_VALIDATION_GUIDE.md # NEW: API, proxy, validation guide
 │   └── ...
 ├── lib/
-│   ├── main.dart                  # Application entry point
-│   ├── pages/                     # Application pages/screens
-│   │   ├── home_page.dart        # Home page (displays student info)
-│   │   ├── add_book_page.dart    # Add new book page
-│   │   └── booklist_page.dart    # Book list page
-│   └── widgets/                   # Reusable UI components
-│       ├── book_form.dart         # Book form widget
-│       ├── input_box.dart         # Input field widget
-│       └── navigation_frame.dart  # Navigation layout widget
-├── web/                           # Web-specific files
-├── linux/                         # Linux-specific files
-├── macos/                         # macOS-specific files
-├── windows/                       # Windows-specific files
-├── test/                          # Unit and widget tests
-├── pubspec.yaml                   # Project dependencies and metadata
-├── analysis_options.yaml          # Dart analyzer configuration
-├── .gitignore                     # Git ignore rules
-└── README.md                      # This file
+│   ├── main.dart                      # Application entry point
+│   ├── config/                        # NEW: Configuration
+│   │   ├── api_config.dart           # API and proxy configuration
+│   │   └── settings_provider.dart    # Settings state management
+│   ├── pages/                         # Application pages/screens
+│   │   ├── home_page.dart            # Home page (displays student info)
+│   │   ├── add_book_page.dart        # Add new book page
+│   │   ├── booklist_page.dart        # Book list page
+│   │   └── settings_page.dart        # NEW: Settings page
+│   ├── services/                      # NEW: API services
+│   │   ├── api_service.dart          # HTTP client with error handling
+│   │   └── book_service.dart         # Book-related API operations
+│   ├── themes/                        # NEW: Theme management
+│   │   ├── app_themes.dart           # Theme definitions
+│   │   └── theme_provider.dart       # Theme state management
+│   ├── utils/                         # NEW: Utilities
+│   │   └── validators.dart           # Input validation functions
+│   └── widgets/                       # Reusable UI components
+│       ├── book_form.dart            # Book form widget (with validation)
+│       ├── input_box.dart            # Input field widget (with validation)
+│       └── navigation_frame.dart     # Navigation layout widget
+├── web/                               # Web-specific files
+├── linux/                             # Linux-specific files
+├── macos/                             # macOS-specific files
+├── windows/                           # Windows-specific files
+├── test/                              # Unit and widget tests
+├── pubspec.yaml                       # Project dependencies and metadata
+├── analysis_options.yaml              # Dart analyzer configuration
+├── .gitignore                         # Git ignore rules
+└── README.md                          # This file
 ```
 
 ---
@@ -491,6 +588,14 @@ eee4482/
 - Refer to `docs/Worksheet7g_v1.3.docx` for detailed project requirements
 - Additional worksheets in `docs/` folder for context and background
 
+### NEW: API & Feature Documentation (V1.1)
+- **[API, Proxy & Validation Guide](docs/API_PROXY_VALIDATION_GUIDE.md)** - Comprehensive guide for:
+  - API calls with error handling
+  - Proxy configuration
+  - Input validation
+  - UI themes
+  - Code examples and best practices
+
 ### Development Tools
 - [Visual Studio Code](https://code.visualstudio.com/)
 - [Android Studio](https://developer.android.com/studio)
@@ -500,7 +605,18 @@ eee4482/
 
 ## 📝 Version History
 
-### V1.0 (Initial Release)
+### V1.1 (Current Release - 2025-11-02)
+- ✅ **API Calls**: Robust HTTP client with error handling, timeouts, and authentication
+- ✅ **Proxy Support**: Configurable proxy for development and corporate networks
+- ✅ **Input Validation**: Comprehensive validation with real-time feedback
+- ✅ **Multiple Themes**: 4 professional themes (Default, GitHub, JetBrains, Xcode)
+- ✅ **Settings Page**: Configure API, proxy, and theme preferences
+- ✅ **Enhanced Book Form**: Full CRUD operations with validation
+- ✅ **Documentation**: Comprehensive API and feature guide
+- ✅ **State Management**: Provider-based architecture
+- ✅ **Settings Persistence**: SharedPreferences for user preferences
+
+### V1.0 (Initial Release - 2025-11-01)
 - ✅ Basic e-library functionality (browse, add books)
 - ✅ Student information integration (HE HUALIANG - 230263367)
 - ✅ Multi-platform support (Web, Linux, macOS, Windows)
