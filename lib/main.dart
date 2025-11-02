@@ -6,13 +6,25 @@
 /// Supports multi-platform deployment (Web, Linux, macOS, Windows).
 
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'pages/home_page.dart';
 import 'pages/add_book_page.dart';
 import 'pages/booklist_page.dart';
+import 'pages/settings_page.dart';
+import 'themes/theme_provider.dart';
+import 'config/settings_provider.dart';
 
 /// Application entry point
 void main() {
-  runApp(const App());
+  runApp(
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => ThemeProvider()),
+        ChangeNotifierProvider(create: (_) => SettingsProvider()),
+      ],
+      child: const App(),
+    ),
+  );
 }
 
 /// Root application widget that configures the MaterialApp
@@ -22,21 +34,23 @@ class App extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'EEE4482 e-Library',
-      initialRoute: '/',
-      // Define application routes for navigation
-      routes: {
-        '/': (context) => HomePage(),
-        '/home': (context) => HomePage(),
-        '/add': (context) => AddBookPage(),
-        '/booklist': (context) => BooklistPage(),
+    return Consumer<ThemeProvider>(
+      builder: (context, themeProvider, child) {
+        return MaterialApp(
+          title: 'EEE4482 e-Library',
+          initialRoute: '/',
+          // Define application routes for navigation
+          routes: {
+            '/': (context) => HomePage(),
+            '/home': (context) => HomePage(),
+            '/add': (context) => AddBookPage(),
+            '/booklist': (context) => BooklistPage(),
+            '/settings': (context) => const SettingsPage(),
+          },
+          // Use theme from provider
+          theme: themeProvider.themeData,
+        );
       },
-      // Material Design 3 theme with custom color scheme
-      theme: ThemeData(
-        useMaterial3: true,
-        colorSchemeSeed: Color.fromARGB(255, 207, 183, 105),
-      ),
     );
   }
 }

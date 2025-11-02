@@ -38,6 +38,9 @@ class _NavigationFrameState extends State<NavigationFrame> {
                   case 2:
                     Navigator.pushNamed(context, '/booklist');
                     break;
+                  case 3:
+                    Navigator.pushNamed(context, '/settings');
+                    break;
                   default:
                     Navigator.pushNamed(context, '/');
                 }
@@ -49,7 +52,6 @@ class _NavigationFrameState extends State<NavigationFrame> {
                 label: Text('Home'),
                 selectedIcon: Icon(Icons.home),
               ),
-
               NavigationRailDestination(
                 icon: Icon(Icons.my_library_add_outlined),
                 label: Text('Add Book'),
@@ -61,9 +63,9 @@ class _NavigationFrameState extends State<NavigationFrame> {
                 selectedIcon: Icon(Icons.library_books),
               ),
               NavigationRailDestination(
-                icon: Icon(Icons.logout_outlined),
-                label: Text('Logout'),
-                selectedIcon: Icon(Icons.logout),
+                icon: Icon(Icons.settings_outlined),
+                label: Text('Settings'),
+                selectedIcon: Icon(Icons.settings),
               ),
             ],
           ),
