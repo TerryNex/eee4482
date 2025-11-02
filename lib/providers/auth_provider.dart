@@ -35,19 +35,20 @@ class AuthProvider extends ChangeNotifier {
       final prefs = await SharedPreferences.getInstance();
       
       _rememberMe = prefs.getBool(_rememberMeKey) ?? false;
+      _authToken = prefs.getString(_authTokenKey);
+      final userDataStr = prefs.getString(_userDataKey);
       
-      if (_rememberMe) {
-        _authToken = prefs.getString(_authTokenKey);
-        final userData = prefs.getString(_userDataKey);
-        
-        if (_authToken != null && userData != null) {
-          // TODO: Validate token with backend
+      if (_authToken != null && userDataStr != null) {
+        // Parse user data (simple format: username|email|role|displayName)
+        final parts = userDataStr.split('|');
+        if (parts.length >= 4) {
           _isAuthenticated = true;
-          // TODO: Parse user data from JSON
           _currentUser = {
-            'username': 'demo_user',
-            'email': 'demo@example.com',
-            'role': 'user',
+            'id': int.tryParse(parts[0]) ?? 1,
+            'username': parts[1],
+            'email': parts[2],
+            'role': parts[3],
+            'displayName': parts.length > 4 ? parts[4] : parts[1],
           };
         }
       }
@@ -63,25 +64,56 @@ class AuthProvider extends ChangeNotifier {
   Future<bool> login(String username, String password, bool rememberMe) async {
     try {
       // TODO: Call backend API for authentication
-      // For now, simulate login
+      // For now, simulate login with validation
       await Future.delayed(const Duration(seconds: 1));
       
-      // Simulate successful login
+      // Simulate backend validation - check if user exists in "registered users"
+      final prefs = await SharedPreferences.getInstance();
+      final registeredUsers = prefs.getStringList('registered_users') ?? [];
+      
+      // Check if username exists and password matches (in real app, this is done by backend)
+      bool userFound = false;
+      String? userEmail;
+      String? userRole;
+      
+      for (final userStr in registeredUsers) {
+        final parts = userStr.split('|');
+        if (parts.length >= 3 && parts[0] == username) {
+          // Simple password check (in real app, use hashed passwords)
+          if (parts[2] == password) {
+            userFound = true;
+            userEmail = parts[1];
+            userRole = parts.length > 3 ? parts[3] : 'user';
+            break;
+          }
+        }
+      }
+      
+      // Also allow default admin login
+      if (username == 'admin' && password == 'Admin@123') {
+        userFound = true;
+        userEmail = 'admin@elibrary.local';
+        userRole = 'admin';
+      }
+      
+      if (!userFound) {
+        return false;
+      }
+      
+      // Successful login
       _isAuthenticated = true;
       _rememberMe = rememberMe;
-      _authToken = 'demo_token_${DateTime.now().millisecondsSinceEpoch}';
+      _authToken = 'token_${DateTime.now().millisecondsSinceEpoch}';
       _currentUser = {
         'id': 1,
         'username': username,
-        'email': '$username@example.com',
-        'role': username == 'admin' ? 'admin' : 'user',
+        'email': userEmail ?? '$username@example.com',
+        'role': userRole ?? 'user',
         'displayName': username,
       };
       
-      // Save to storage if remember me
-      if (_rememberMe) {
-        await _saveAuthState();
-      }
+      // Always save to storage for session persistence
+      await _saveAuthState();
       
       notifyListeners();
       return true;
@@ -99,7 +131,7 @@ class AuthProvider extends ChangeNotifier {
   }) async {
     try {
       // TODO: Call backend API for registration
-      // For now, simulate registration
+      // For now, simulate registration with local storage
       await Future.delayed(const Duration(seconds: 1));
       
       // Validate username
@@ -142,11 +174,29 @@ class AuthProvider extends ChangeNotifier {
         };
       }
       
+      // Check if username already exists
+      final prefs = await SharedPreferences.getInstance();
+      final registeredUsers = prefs.getStringList('registered_users') ?? [];
+      
+      for (final userStr in registeredUsers) {
+        final parts = userStr.split('|');
+        if (parts.isNotEmpty && parts[0] == username) {
+          return {
+            'success': false,
+            'message': 'Username already exists',
+          };
+        }
+      }
+      
+      // Store user data (format: username|email|password|role)
+      registeredUsers.add('$username|$email|$password|user');
+      await prefs.setStringList('registered_users', registeredUsers);
+      
       // Simulate successful registration
       return {
         'success': true,
-        'message': 'Registration successful. Please check your email to activate your account.',
-        'requiresVerification': true,
+        'message': 'Registration successful. You can now login.',
+        'requiresVerification': false,
       };
     } catch (e) {
       debugPrint('Registration error: $e');
@@ -177,12 +227,13 @@ class AuthProvider extends ChangeNotifier {
       _isAuthenticated = false;
       _currentUser = null;
       _authToken = null;
+      _rememberMe = false;
       
       // Clear storage
       final prefs = await SharedPreferences.getInstance();
       await prefs.remove(_authTokenKey);
       await prefs.remove(_userDataKey);
-      // Keep remember me preference
+      await prefs.setBool(_rememberMeKey, false);
       
       notifyListeners();
     } catch (e) {
@@ -245,8 +296,9 @@ class AuthProvider extends ChangeNotifier {
       }
       
       if (_currentUser != null) {
-        // TODO: Serialize user data to JSON
-        await prefs.setString(_userDataKey, _currentUser.toString());
+        // Serialize user data (simple format: id|username|email|role|displayName)
+        final userData = '${_currentUser!['id']}|${_currentUser!['username']}|${_currentUser!['email']}|${_currentUser!['role']}|${_currentUser!['displayName']}';
+        await prefs.setString(_userDataKey, userData);
       }
       
       await prefs.setBool(_rememberMeKey, _rememberMe);
