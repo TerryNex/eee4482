@@ -11,8 +11,11 @@ import 'pages/home_page.dart';
 import 'pages/add_book_page.dart';
 import 'pages/booklist_page.dart';
 import 'pages/settings_page.dart';
+import 'pages/login_page.dart';
+import 'pages/register_page.dart';
 import 'themes/theme_provider.dart';
 import 'config/settings_provider.dart';
+import 'providers/auth_provider.dart';
 
 /// Application entry point
 void main() {
@@ -21,6 +24,7 @@ void main() {
       providers: [
         ChangeNotifierProvider(create: (_) => ThemeProvider()),
         ChangeNotifierProvider(create: (_) => SettingsProvider()),
+        ChangeNotifierProvider(create: (_) => AuthProvider()),
       ],
       child: const App(),
     ),
@@ -38,10 +42,12 @@ class App extends StatelessWidget {
       builder: (context, themeProvider, child) {
         return MaterialApp(
           title: 'EEE4482 e-Library',
-          initialRoute: '/',
+          initialRoute: '/login',
           // Define application routes for navigation
           routes: {
-            '/': (context) => HomePage(),
+            '/': (context) => const LoginPage(),
+            '/login': (context) => const LoginPage(),
+            '/register': (context) => const RegisterPage(),
             '/home': (context) => HomePage(),
             '/add': (context) => AddBookPage(),
             '/booklist': (context) => BooklistPage(),
