@@ -1,6 +1,6 @@
 /// EEE4482 e-Library Application
 /// Student: HE HUALIANG (230263367)
-/// 
+///
 /// A Flutter-based e-library management system that provides
 /// a user-friendly interface for browsing and managing books.
 /// Supports multi-platform deployment (Web, Linux, macOS, Windows).
@@ -33,6 +33,9 @@ void main() {
   );
 }
 
+/// Route observer to track navigation changes
+final RouteObserver<PageRoute> routeObserver = RouteObserver<PageRoute>();
+
 /// Root application widget that configures the MaterialApp
 /// with routes and theme settings
 class App extends StatelessWidget {
@@ -59,6 +62,7 @@ class App extends StatelessWidget {
           },
           // Use theme from provider
           theme: themeProvider.themeData,
+          navigatorObservers: [routeObserver],
         );
       },
     );

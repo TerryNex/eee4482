@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
+import '../main.dart';
 
 class NavigationFrame extends StatefulWidget {
   Widget child;
@@ -15,11 +16,65 @@ class NavigationFrame extends StatefulWidget {
   State<NavigationFrame> createState() => _NavigationFrameState();
 }
 
-class _NavigationFrameState extends State<NavigationFrame> {
+class _NavigationFrameState extends State<NavigationFrame> with RouteAware {
+  late int _currentIndex;
+
+  @override
+  void initState() {
+    super.initState();
+    _currentIndex = widget.selectedIndex;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final route = ModalRoute.of(context);
+      if (route != null && route is PageRoute) {
+        routeObserver.subscribe(this, route);
+      }
+    });
+  }
+
+  @override
+  void didPopNext() {
+    _updateIndexFromRoute();
+  }
+
+  @override
+  void didPush() {
+    _updateIndexFromRoute();
+  }
+
+  void _updateIndexFromRoute() {
+    final routeName = ModalRoute.of(context)?.settings.name ?? '/';
+    setState(() {
+      _currentIndex = _getIndexFromRoute(routeName);
+    });
+  }
+
+  int _getIndexFromRoute(String routeName) {
+    switch (routeName) {
+      case '/home':
+        return 0;
+      case '/dashboard':
+        return 1;
+      case '/add':
+        return 2;
+      case '/booklist':
+        return 3;
+      case '/settings':
+        return 4;
+      default:
+        return 0;
+    }
+  }
+
+  @override
+  void dispose() {
+    routeObserver.unsubscribe(this);
+    super.dispose();
+  }
+
   void _showUserMenu(BuildContext context) {
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
     final user = authProvider.currentUser;
-    
+
     showModalBottomSheet(
       context: context,
       builder: (BuildContext context) {
@@ -34,7 +89,10 @@ class _NavigationFrameState extends State<NavigationFrame> {
                 leading: CircleAvatar(
                   child: Text(
                     (user?['username'] ?? 'U')[0].toUpperCase(),
-                    style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                    style: const TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
                 title: Text(
@@ -44,7 +102,7 @@ class _NavigationFrameState extends State<NavigationFrame> {
                 subtitle: Text(user?['email'] ?? ''),
               ),
               const Divider(),
-              
+
               // Change password
               ListTile(
                 leading: const Icon(Icons.lock_outline),
@@ -54,11 +112,14 @@ class _NavigationFrameState extends State<NavigationFrame> {
                   Navigator.pushNamed(context, '/change-password');
                 },
               ),
-              
+
               // Logout
               ListTile(
                 leading: const Icon(Icons.logout, color: Colors.red),
-                title: const Text('Logout', style: TextStyle(color: Colors.red)),
+                title: const Text(
+                  'Logout',
+                  style: TextStyle(color: Colors.red),
+                ),
                 onTap: () async {
                   Navigator.pop(context);
                   await authProvider.logout();
@@ -83,7 +144,7 @@ class _NavigationFrameState extends State<NavigationFrame> {
             children: [
               NavigationRail(
                 backgroundColor: Colors.grey.shade100,
-                selectedIndex: widget.selectedIndex,
+                selectedIndex: _currentIndex,
                 groupAlignment: -1.0,
                 labelType: NavigationRailLabelType.all,
                 leading: authProvider.isAuthenticated
@@ -92,8 +153,11 @@ class _NavigationFrameState extends State<NavigationFrame> {
                         child: IconButton(
                           icon: CircleAvatar(
                             child: Text(
-                              (authProvider.currentUser?['username'] ?? 'U')[0].toUpperCase(),
-                              style: const TextStyle(fontWeight: FontWeight.bold),
+                              (authProvider.currentUser?['username'] ?? 'U')[0]
+                                  .toUpperCase(),
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
                           ),
                           onPressed: () => _showUserMenu(context),
@@ -103,7 +167,7 @@ class _NavigationFrameState extends State<NavigationFrame> {
                     : null,
                 onDestinationSelected: (int index) {
                   setState(() {
-                    widget.selectedIndex = index;
+                    _currentIndex = index;
                     switch (index) {
                       case 0:
                         Navigator.pushNamed(context, '/home');
