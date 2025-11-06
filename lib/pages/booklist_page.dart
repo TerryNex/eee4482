@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../widgets/navigation_frame.dart';
 import '../widgets/book_form.dart';
+import '../widgets/personal_info.dart';
 
 class BooklistPage extends StatefulWidget {
   List<Map<String, dynamic>> bookList = [
@@ -49,8 +50,15 @@ class _BooklistPageState extends State<BooklistPage> {
   }
 
   Widget createBookLists(List<dynamic> books) {
-    return ListView(
-      children: [for (var book in books!) createSingleBookRecord(book)],
+    return Column(
+      children: [
+        PersonalInfoWidget(),
+        Expanded(
+          child: ListView(
+            children: [for (var book in books!) createSingleBookRecord(book)],
+          ),
+        ),
+      ],
     );
   }
 

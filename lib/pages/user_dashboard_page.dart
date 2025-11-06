@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
 import '../widgets/navigation_frame.dart';
+import '../widgets/personal_info.dart';
 
 class UserDashboardPage extends StatefulWidget {
   const UserDashboardPage({super.key});
@@ -62,78 +63,83 @@ class _UserDashboardPageState extends State<UserDashboardPage> {
   @override
   Widget build(BuildContext context) {
     final authProvider = Provider.of<AuthProvider>(context);
-    
+
     // Redirect if not authenticated
     if (!authProvider.isAuthenticated) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         Navigator.pushReplacementNamed(context, '/login');
       });
-      return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      );
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
     final user = authProvider.currentUser;
 
     return NavigationFrame(
       selectedIndex: -1, // Custom page, no nav item selected
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Header
-            const Text(
-              'My Dashboard',
-              style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold),
+      child: Column(
+        children: [
+          PersonalInfoWidget(),
+          Expanded(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Header
+                  const Text(
+                    'My Dashboard',
+                    style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 30),
+
+                  // Personal Information Card
+                  _buildPersonalInfoCard(user),
+                  const SizedBox(height: 20),
+
+                  // Statistics Cards
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _buildStatCard(
+                          'Books Borrowed',
+                          '${_borrowingHistory.where((b) => b['status'] == 'borrowed').length}',
+                          Icons.book,
+                          Colors.blue,
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: _buildStatCard(
+                          'Total Borrowed',
+                          '${_borrowingHistory.length}',
+                          Icons.history,
+                          Colors.green,
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: _buildStatCard(
+                          'Liked Books',
+                          '${_likedBooks.length}',
+                          Icons.favorite,
+                          Colors.red,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 30),
+
+                  // Borrowing History Section
+                  _buildBorrowingHistorySection(),
+                  const SizedBox(height: 30),
+
+                  // Liked Books Section
+                  _buildLikedBooksSection(),
+                ],
+              ),
             ),
-            const SizedBox(height: 30),
-            
-            // Personal Information Card
-            _buildPersonalInfoCard(user),
-            const SizedBox(height: 20),
-            
-            // Statistics Cards
-            Row(
-              children: [
-                Expanded(
-                  child: _buildStatCard(
-                    'Books Borrowed',
-                    '${_borrowingHistory.where((b) => b['status'] == 'borrowed').length}',
-                    Icons.book,
-                    Colors.blue,
-                  ),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: _buildStatCard(
-                    'Total Borrowed',
-                    '${_borrowingHistory.length}',
-                    Icons.history,
-                    Colors.green,
-                  ),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: _buildStatCard(
-                    'Liked Books',
-                    '${_likedBooks.length}',
-                    Icons.favorite,
-                    Colors.red,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 30),
-            
-            // Borrowing History Section
-            _buildBorrowingHistorySection(),
-            const SizedBox(height: 30),
-            
-            // Liked Books Section
-            _buildLikedBooksSection(),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -148,7 +154,10 @@ class _UserDashboardPageState extends State<UserDashboardPage> {
               radius: 40,
               child: Text(
                 (user?['username'] ?? 'U')[0].toUpperCase(),
-                style: const TextStyle(fontSize: 32, fontWeight: FontWeight.bold),
+                style: const TextStyle(
+                  fontSize: 32,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ),
             const SizedBox(width: 20),
@@ -158,7 +167,10 @@ class _UserDashboardPageState extends State<UserDashboardPage> {
                 children: [
                   Text(
                     user?['displayName'] ?? user?['username'] ?? 'User',
-                    style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                    style: const TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                   const SizedBox(height: 4),
                   Text(
@@ -172,7 +184,9 @@ class _UserDashboardPageState extends State<UserDashboardPage> {
                       style: const TextStyle(fontSize: 12),
                     ),
                     avatar: Icon(
-                      user?['role'] == 'admin' ? Icons.admin_panel_settings : Icons.person,
+                      user?['role'] == 'admin'
+                          ? Icons.admin_panel_settings
+                          : Icons.person,
                       size: 18,
                     ),
                   ),
@@ -185,7 +199,12 @@ class _UserDashboardPageState extends State<UserDashboardPage> {
     );
   }
 
-  Widget _buildStatCard(String title, String value, IconData icon, Color color) {
+  Widget _buildStatCard(
+    String title,
+    String value,
+    IconData icon,
+    Color color,
+  ) {
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(20),
@@ -238,9 +257,7 @@ class _UserDashboardPageState extends State<UserDashboardPage> {
           const Card(
             child: Padding(
               padding: EdgeInsets.all(40),
-              child: Center(
-                child: Text('No borrowing history yet'),
-              ),
+              child: Center(child: Text('No borrowing history yet')),
             ),
           )
         else
@@ -251,7 +268,7 @@ class _UserDashboardPageState extends State<UserDashboardPage> {
 
   Widget _buildBorrowingCard(Map<String, dynamic> record) {
     final isBorrowed = record['status'] == 'borrowed';
-    
+
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
       child: ListTile(
@@ -285,7 +302,9 @@ class _UserDashboardPageState extends State<UserDashboardPage> {
             isBorrowed ? 'Borrowed' : 'Returned',
             style: const TextStyle(fontSize: 12),
           ),
-          backgroundColor: isBorrowed ? Colors.orange.shade100 : Colors.green.shade100,
+          backgroundColor: isBorrowed
+              ? Colors.orange.shade100
+              : Colors.green.shade100,
         ),
       ),
     );
@@ -316,9 +335,7 @@ class _UserDashboardPageState extends State<UserDashboardPage> {
           const Card(
             child: Padding(
               padding: EdgeInsets.all(40),
-              child: Center(
-                child: Text('No liked books yet'),
-              ),
+              child: Center(child: Text('No liked books yet')),
             ),
           )
         else
@@ -343,7 +360,7 @@ class _UserDashboardPageState extends State<UserDashboardPage> {
   Widget _buildBookCard(Map<String, dynamic> book) {
     final hasStatus = book['status'] == 'available';
     final firstLetter = book['title'][0].toUpperCase();
-    
+
     return Card(
       clipBehavior: Clip.antiAlias,
       child: Column(
@@ -352,12 +369,11 @@ class _UserDashboardPageState extends State<UserDashboardPage> {
           // Book cover or first letter
           Expanded(
             child: Container(
-              color: Colors.primaries[firstLetter.codeUnitAt(0) % Colors.primaries.length],
+              color:
+                  Colors.primaries[firstLetter.codeUnitAt(0) %
+                      Colors.primaries.length],
               child: book['coverUrl'] != null
-                  ? Image.network(
-                      book['coverUrl'],
-                      fit: BoxFit.cover,
-                    )
+                  ? Image.network(book['coverUrl'], fit: BoxFit.cover)
                   : Center(
                       child: Text(
                         firstLetter,
@@ -370,7 +386,7 @@ class _UserDashboardPageState extends State<UserDashboardPage> {
                     ),
             ),
           ),
-          
+
           // Book info
           Padding(
             padding: const EdgeInsets.all(12),
@@ -393,9 +409,14 @@ class _UserDashboardPageState extends State<UserDashboardPage> {
                 const SizedBox(height: 8),
                 // Status tag
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
-                    color: hasStatus ? Colors.green.shade100 : Colors.orange.shade100,
+                    color: hasStatus
+                        ? Colors.green.shade100
+                        : Colors.orange.shade100,
                     borderRadius: BorderRadius.circular(4),
                   ),
                   child: Text(
@@ -403,7 +424,9 @@ class _UserDashboardPageState extends State<UserDashboardPage> {
                     style: TextStyle(
                       fontSize: 10,
                       fontWeight: FontWeight.bold,
-                      color: hasStatus ? Colors.green.shade700 : Colors.orange.shade700,
+                      color: hasStatus
+                          ? Colors.green.shade700
+                          : Colors.orange.shade700,
                     ),
                   ),
                 ),
