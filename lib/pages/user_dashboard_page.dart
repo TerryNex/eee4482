@@ -75,7 +75,7 @@ class _UserDashboardPageState extends State<UserDashboardPage> {
     final user = authProvider.currentUser;
 
     return NavigationFrame(
-      selectedIndex: -1, // Custom page, no nav item selected
+      selectedIndex: 0, // Custom page, no nav item selected
       child: Column(
         children: [
           PersonalInfoWidget(),

@@ -159,7 +159,7 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
     }
 
     return NavigationFrame(
-      selectedIndex: -1, // No nav item selected
+      selectedIndex: 0,
       child: Column(
         children: [
           PersonalInfoWidget(),
