@@ -5,12 +5,7 @@
 import 'package:flutter/material.dart';
 
 /// Theme types available in the application
-enum ThemeType {
-  defaultTheme,
-  githubHighContrast,
-  jetbrains,
-  xcode,
-}
+enum ThemeType { defaultTheme, githubHighContrast, jetbrains, xcode }
 
 /// Application themes manager
 class AppThemes {
@@ -29,7 +24,7 @@ class AppThemes {
     const primaryColor = Color(0xFF0969DA); // GitHub blue
     const backgroundColor = Color(0xFF0D1117); // GitHub dark background
     const surfaceColor = Color(0xFF161B22); // GitHub surface
-    const textColor = Color(0xFFF0F6FC); // GitHub text
+    const textColor = Color(0xFFB6DEFF); // GitHub text
     const accentColor = Color(0xFF58A6FF); // GitHub accent
     const errorColor = Color(0xFFFF7B72); // GitHub error
     const successColor = Color(0xFF3FB950); // GitHub success
@@ -48,14 +43,14 @@ class AppThemes {
         onError: Colors.white,
       ),
       scaffoldBackgroundColor: backgroundColor,
-      
+
       // AppBar theme
       appBarTheme: const AppBarTheme(
         backgroundColor: surfaceColor,
         foregroundColor: textColor,
         elevation: 0,
       ),
-      
+
       // Card theme
       cardTheme: CardThemeData(
         color: surfaceColor,
@@ -65,7 +60,7 @@ class AppThemes {
           side: const BorderSide(color: Color(0xFF30363D), width: 1),
         ),
       ),
-      
+
       // Input decoration theme
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
@@ -87,28 +82,26 @@ class AppThemes {
           borderSide: const BorderSide(color: errorColor),
         ),
       ),
-      
+
       // Elevated button theme
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
           backgroundColor: successColor,
           foregroundColor: Colors.white,
           elevation: 0,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(6),
-          ),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
         ),
       ),
-      
+
       // Navigation rail theme
       navigationRailTheme: NavigationRailThemeData(
         backgroundColor: surfaceColor,
-        selectedIconTheme: const IconThemeData(color: accentColor),
+        selectedIconTheme: const IconThemeData(color: Colors.white),
         unselectedIconTheme: const IconThemeData(color: Color(0xFF8B949E)),
-        selectedLabelTextStyle: const TextStyle(color: textColor),
+        selectedLabelTextStyle: const TextStyle(color: Colors.blueAccent),
         unselectedLabelTextStyle: const TextStyle(color: Color(0xFF8B949E)),
       ),
-      
+
       // Text theme
       textTheme: const TextTheme(
         bodyLarge: TextStyle(color: textColor),
@@ -124,7 +117,7 @@ class AppThemes {
     const primaryColor = Color(0xFF4B93E5); // IntelliJ blue
     const backgroundColor = Color(0xFF2B2B2B); // Darcula background
     const surfaceColor = Color(0xFF3C3F41); // Darcula surface
-    const textColor = Color(0xFFA9B7C6); // Darcula text
+    const textColor = Color(0xFFC3DDFF); // Darcula text
     const accentColor = Color(0xFFFFC66D); // IntelliJ yellow
     const errorColor = Color(0xFFFF6B68); // IntelliJ error
     const successColor = Color(0xFF6A8759); // IntelliJ green
@@ -143,14 +136,14 @@ class AppThemes {
         onError: Colors.white,
       ),
       scaffoldBackgroundColor: backgroundColor,
-      
+
       // AppBar theme
       appBarTheme: const AppBarTheme(
         backgroundColor: surfaceColor,
         foregroundColor: textColor,
         elevation: 0,
       ),
-      
+
       // Card theme
       cardTheme: CardThemeData(
         color: surfaceColor,
@@ -160,7 +153,7 @@ class AppThemes {
           side: const BorderSide(color: Color(0xFF535353), width: 1),
         ),
       ),
-      
+
       // Input decoration theme
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
@@ -182,28 +175,26 @@ class AppThemes {
           borderSide: const BorderSide(color: errorColor),
         ),
       ),
-      
+
       // Elevated button theme
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
           backgroundColor: primaryColor,
           foregroundColor: Colors.white,
           elevation: 0,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(4),
-          ),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
         ),
       ),
-      
+
       // Navigation rail theme
       navigationRailTheme: NavigationRailThemeData(
         backgroundColor: surfaceColor,
-        selectedIconTheme: const IconThemeData(color: accentColor),
+        selectedIconTheme: const IconThemeData(color: Colors.white),
         unselectedIconTheme: const IconThemeData(color: Color(0xFF787878)),
-        selectedLabelTextStyle: const TextStyle(color: accentColor),
+        selectedLabelTextStyle: const TextStyle(color: Colors.brown),
         unselectedLabelTextStyle: const TextStyle(color: Color(0xFF787878)),
       ),
-      
+
       // Text theme with JetBrains Mono-style font
       textTheme: const TextTheme(
         bodyLarge: TextStyle(color: textColor),
@@ -238,14 +229,14 @@ class AppThemes {
         onError: Colors.white,
       ),
       scaffoldBackgroundColor: backgroundColor,
-      
+
       // AppBar theme
       appBarTheme: const AppBarTheme(
         backgroundColor: surfaceColor,
         foregroundColor: textColor,
         elevation: 0,
       ),
-      
+
       // Card theme
       cardTheme: CardThemeData(
         color: surfaceColor,
@@ -255,7 +246,7 @@ class AppThemes {
           side: const BorderSide(color: Color(0xFFE5E5EA), width: 1),
         ),
       ),
-      
+
       // Input decoration theme
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
@@ -277,28 +268,26 @@ class AppThemes {
           borderSide: const BorderSide(color: errorColor),
         ),
       ),
-      
+
       // Elevated button theme
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
           backgroundColor: primaryColor,
           foregroundColor: Colors.white,
           elevation: 0,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(8),
-          ),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
         ),
       ),
-      
+
       // Navigation rail theme
       navigationRailTheme: NavigationRailThemeData(
         backgroundColor: surfaceColor,
-        selectedIconTheme: const IconThemeData(color: primaryColor),
+        selectedIconTheme: const IconThemeData(color: Colors.yellowAccent),
         unselectedIconTheme: const IconThemeData(color: Color(0xFF8E8E93)),
         selectedLabelTextStyle: const TextStyle(color: primaryColor),
         unselectedLabelTextStyle: const TextStyle(color: Color(0xFF8E8E93)),
       ),
-      
+
       // Text theme with San Francisco-style font
       textTheme: const TextTheme(
         bodyLarge: TextStyle(color: textColor),
