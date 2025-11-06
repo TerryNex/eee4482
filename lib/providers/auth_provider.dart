@@ -4,6 +4,9 @@
 
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import '../config/api_config.dart';
 
 /// Authentication state provider
 class AuthProvider extends ChangeNotifier {
@@ -28,6 +31,17 @@ class AuthProvider extends ChangeNotifier {
   String? get authToken => _authToken;
   bool get rememberMe => _rememberMe;
   bool get isAdmin => _currentUser?['role'] == 'admin';
+
+  Uri _buildUri(String path) {
+    final base = ApiConfig.baseUrl?.trim() ?? '';
+    if (base.isEmpty) {
+      throw Exception('ApiConfig.baseUrl is empty. 请设置 ApiConfig.host');
+    }
+    final trimmedBase = base.replaceAll(RegExp(r'\/+$'), '');
+    final trimmedPath = path.replaceAll(RegExp(r'^\/+'), '');
+    final full = '$trimmedBase/$trimmedPath';
+    return Uri.parse(full);
+  }
 
   /// Load authentication state from storage
   Future<void> _loadAuthState() async {
@@ -63,9 +77,51 @@ class AuthProvider extends ChangeNotifier {
   /// Login user
   Future<bool> login(String username, String password, bool rememberMe) async {
     try {
-      // TODO: Call backend API for authentication
       // For now, simulate login with validation
-      await Future.delayed(const Duration(seconds: 1));
+      // await Future.delayed(const Duration(seconds: 1));
+      // Call backend API
+      final path = '/auth/login';
+      final uri = _buildUri(path);
+      final response = await http
+          .post(
+            uri,
+            headers: {'Content-Type': 'application/json'},
+            body: json.encode({'username': username, 'password': password}),
+          )
+          .timeout(const Duration(seconds: 10));
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        final token = data['token'] as String?;
+        // final user = data['user'] as Map<String, dynamic>?;
+
+        if (token == null) {
+          // || user == null) {
+          return false;
+        }
+
+        _isAuthenticated = true;
+        _rememberMe = rememberMe;
+        _authToken = token; //jwt is here
+        final user = data;
+        _currentUser = {
+          'id': user['user_id'] ?? 1,
+          'username': user['username'] ?? username,
+          'email': user['email'] ?? '$username@placeholder.com',
+          'is_admin': user['is_admin'] ?? false,
+          'last_login': user['last_login'] ?? null,
+        };
+
+        await _saveAuthState();
+        notifyListeners();
+        return true;
+      } else {
+        // if not 200, login failed
+        debugPrint('Login failed: ${response.statusCode} ${response.body}');
+        return false;
+      }
+
+      // Below is the simulated login logic without backend API call will not execute
 
       // Simulate backend validation - check if user exists in "registered users"
       final prefs = await SharedPreferences.getInstance();
@@ -322,7 +378,7 @@ class AuthProvider extends ChangeNotifier {
         }
       }
 
-      foundUserEmail = 'test';
+      // foundUserEmail = 'test';
 
       // User not found
       if (foundUserEmail == null) {
@@ -442,4 +498,8 @@ class AuthProvider extends ChangeNotifier {
 
     notifyListeners();
   }
+}
+
+extension on Uri {
+  operator +(Uri other) {}
 }

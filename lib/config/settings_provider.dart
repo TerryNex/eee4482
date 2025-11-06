@@ -10,7 +10,7 @@ import 'api_config.dart';
 class SettingsProvider extends ChangeNotifier {
   // API Settings
   String _apiBaseUrl = ApiConfig.baseUrl;
-  
+
   // Proxy Settings
   bool _useProxy = ApiConfig.useProxy;
   String _proxyHost = ApiConfig.proxyHost;
@@ -36,7 +36,7 @@ class SettingsProvider extends ChangeNotifier {
   Future<void> _loadSettings() async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      
+
       _apiBaseUrl = prefs.getString(_apiBaseUrlKey) ?? ApiConfig.baseUrl;
       _useProxy = prefs.getBool(_useProxyKey) ?? ApiConfig.useProxy;
       _proxyHost = prefs.getString(_proxyHostKey) ?? ApiConfig.proxyHost;
@@ -44,7 +44,7 @@ class SettingsProvider extends ChangeNotifier {
 
       // Update ApiConfig
       _updateApiConfig();
-      
+
       notifyListeners();
     } catch (e) {
       // If loading fails, use defaults
@@ -55,11 +55,7 @@ class SettingsProvider extends ChangeNotifier {
   void _updateApiConfig() {
     // Note: Since ApiConfig uses static fields, we can't directly update baseUrl
     // In a production app, you might want to refactor ApiConfig to be injectable
-    ApiConfig.setProxy(
-      enabled: _useProxy,
-      host: _proxyHost,
-      port: _proxyPort,
-    );
+    ApiConfig.setProxy(enabled: _useProxy, host: _proxyHost, port: _proxyPort);
   }
 
   /// Set API base URL
@@ -125,7 +121,7 @@ class SettingsProvider extends ChangeNotifier {
     _apiBaseUrl = ApiConfig.baseUrl;
     _useProxy = false;
     _proxyHost = '';
-    _proxyPort = 8080;
+    _proxyPort = 80;
 
     _updateApiConfig();
     notifyListeners();
