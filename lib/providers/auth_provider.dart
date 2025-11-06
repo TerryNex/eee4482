@@ -30,15 +30,15 @@ class AuthProvider extends ChangeNotifier {
   Map<String, dynamic>? get currentUser => _currentUser;
   String? get authToken => _authToken;
   bool get rememberMe => _rememberMe;
-  bool get isAdmin => _currentUser?['role'] == 'admin';
+  bool get isAdmin => _currentUser?['is_admin'] == true;
 
   Uri _buildUri(String path) {
-    final base = ApiConfig.baseUrl?.trim() ?? '';
+    final base = ApiConfig.baseUrl.trim();
     if (base.isEmpty) {
-      throw Exception('ApiConfig.baseUrl is empty. 请设置 ApiConfig.host');
+      throw Exception('ApiConfig.baseUrl is empty');
     }
-    final trimmedBase = base.replaceAll(RegExp(r'\/+$'), '');
-    final trimmedPath = path.replaceAll(RegExp(r'^\/+'), '');
+    final trimmedBase = base.replaceAll(RegExp(r'/+$'), '');
+    final trimmedPath = path.replaceAll(RegExp(r'^/+'), '');
     final full = '$trimmedBase/$trimmedPath';
     return Uri.parse(full);
   }
@@ -61,7 +61,7 @@ class AuthProvider extends ChangeNotifier {
             'id': int.tryParse(parts[0]) ?? 1,
             'username': parts[1],
             'email': parts[2],
-            'role': parts[3],
+            'is_admin': parts[3] == 'admin',
             'displayName': parts.length > 4 ? parts[4] : parts[1],
           };
         }
@@ -69,7 +69,6 @@ class AuthProvider extends ChangeNotifier {
 
       notifyListeners();
     } catch (e) {
-      // Handle error silently
       debugPrint('Error loading auth state: $e');
     }
   }
@@ -77,8 +76,6 @@ class AuthProvider extends ChangeNotifier {
   /// Login user
   Future<bool> login(String username, String password, bool rememberMe) async {
     try {
-      // For now, simulate login with validation
-      // await Future.delayed(const Duration(seconds: 1));
       // Call backend API
       final path = '/auth/login';
       final uri = _buildUri(path);
@@ -93,86 +90,33 @@ class AuthProvider extends ChangeNotifier {
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         final token = data['token'] as String?;
-        // final user = data['user'] as Map<String, dynamic>?;
 
         if (token == null) {
-          // || user == null) {
           return false;
         }
 
         _isAuthenticated = true;
         _rememberMe = rememberMe;
-        _authToken = token; //jwt is here
-        final user = data;
+        _authToken = token; // JWT token from backend
+
         _currentUser = {
-          'id': user['user_id'] ?? 1,
-          'username': user['username'] ?? username,
-          'email': user['email'] ?? '$username@placeholder.com',
-          'is_admin': user['is_admin'] ?? false,
-          'last_login': user['last_login'] ?? null,
+          'id': data['user_id'] ?? 1,
+          'username': data['username'] ?? username,
+          'email': data['email'] ?? '$username@placeholder.com',
+          'is_admin': data['is_admin'] == 1 || data['is_admin'] == true,
+          'last_login': data['last_login'],
         };
+
+        // Update API config with the token
+        ApiConfig.setAuthToken(token);
 
         await _saveAuthState();
         notifyListeners();
         return true;
       } else {
-        // if not 200, login failed
         debugPrint('Login failed: ${response.statusCode} ${response.body}');
         return false;
       }
-
-      // Below is the simulated login logic without backend API call will not execute
-
-      // Simulate backend validation - check if user exists in "registered users"
-      final prefs = await SharedPreferences.getInstance();
-      final registeredUsers = prefs.getStringList('registered_users') ?? [];
-
-      // Check if username exists and password matches (in real app, this is done by backend)
-      bool userFound = false;
-      String? userEmail;
-      String? userRole;
-
-      for (final userStr in registeredUsers) {
-        final parts = userStr.split('|');
-        if (parts.length >= 3 && parts[0] == username) {
-          // Simple password check (in real app, use hashed passwords)
-          if (parts[2] == password) {
-            userFound = true;
-            userEmail = parts[1];
-            userRole = parts.length > 3 ? parts[3] : 'user';
-            break;
-          }
-        }
-      }
-
-      // Also allow default admin login
-      if (username == 'admin' && password == 'Admin@123') {
-        userFound = true;
-        userEmail = 'admin@elibrary.local';
-        userRole = 'admin';
-      }
-
-      if (!userFound) {
-        return false;
-      }
-
-      // Successful login
-      _isAuthenticated = true;
-      _rememberMe = rememberMe;
-      _authToken = 'token_${DateTime.now().millisecondsSinceEpoch}';
-      _currentUser = {
-        'id': 1,
-        'username': username,
-        'email': userEmail ?? '$username@example.com',
-        'role': userRole ?? 'user',
-        'displayName': username,
-      };
-
-      // Always save to storage for session persistence
-      await _saveAuthState();
-
-      notifyListeners();
-      return true;
     } catch (e) {
       debugPrint('Login error: $e');
       return false;
@@ -186,10 +130,6 @@ class AuthProvider extends ChangeNotifier {
     required String password,
   }) async {
     try {
-      // TODO: Call backend API for registration
-      // For now, simulate registration with local storage
-      await Future.delayed(const Duration(seconds: 1));
-
       // Validate username
       if (username.length < 6) {
         return {
@@ -224,31 +164,41 @@ class AuthProvider extends ChangeNotifier {
       }
 
       // Validate email
-      if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(email)) {
+      if (!RegExp(r'^\w+[-.\w]*@([\w-]+\.)+[\w-]{2,4}$').hasMatch(email)) {
         return {'success': false, 'message': 'Invalid email format'};
       }
 
-      // Check if username already exists
-      final prefs = await SharedPreferences.getInstance();
-      final registeredUsers = prefs.getStringList('registered_users') ?? [];
+      // Call backend API for registration
+      final path = '/auth/register';
+      final uri = _buildUri(path);
+      final response = await http
+          .post(
+            uri,
+            headers: {'Content-Type': 'application/json'},
+            body: json.encode({
+              'username': username,
+              'email': email,
+              'password': password,
+            }),
+          )
+          .timeout(const Duration(seconds: 10));
 
-      for (final userStr in registeredUsers) {
-        final parts = userStr.split('|');
-        if (parts.isNotEmpty && parts[0] == username) {
-          return {'success': false, 'message': 'Username already exists'};
-        }
+      if (response.statusCode == 201) {
+        return {
+          'success': true,
+          'message': 'Registration successful. You can now login.',
+          'requiresVerification': false,
+        };
+      } else if (response.statusCode == 500) {
+        final data = json.decode(response.body);
+        final message = data['message'] ?? 'Registration failed';
+        return {'success': false, 'message': message};
+      } else {
+        return {
+          'success': false,
+          'message': 'Registration failed: ${response.statusCode}',
+        };
       }
-
-      // Store user data (format: username|email|password|role)
-      registeredUsers.add('$username|$email|$password|user');
-      await prefs.setStringList('registered_users', registeredUsers);
-
-      // Simulate successful registration
-      return {
-        'success': true,
-        'message': 'Registration successful. You can now login.',
-        'requiresVerification': false,
-      };
     } catch (e) {
       debugPrint('Registration error: $e');
       return {
@@ -261,11 +211,22 @@ class AuthProvider extends ChangeNotifier {
   /// Verify email with token
   Future<bool> verifyEmail(String token) async {
     try {
-      // TODO: Call backend API for email verification
-      await Future.delayed(const Duration(seconds: 1));
+      final path = '/auth/verify-email';
+      final uri = _buildUri(path);
+      final response = await http
+          .post(
+            uri,
+            headers: {'Content-Type': 'application/json'},
+            body: json.encode({'token': token}),
+          )
+          .timeout(const Duration(seconds: 10));
 
-      // Simulate successful verification
-      return true;
+      if (response.statusCode == 200) {
+        return true;
+      } else {
+        debugPrint('Email verification failed: ${response.statusCode}');
+        return false;
+      }
     } catch (e) {
       debugPrint('Email verification error: $e');
       return false;
@@ -275,10 +236,32 @@ class AuthProvider extends ChangeNotifier {
   /// Logout user
   Future<void> logout() async {
     try {
+      // Call backend API to logout (requires JWT)
+      if (_authToken != null) {
+        final path = '/auth/logout';
+        final uri = _buildUri(path);
+        try {
+          await http
+              .post(
+                uri,
+                headers: {
+                  'Content-Type': 'application/json',
+                  'Authorization': 'Bearer $_authToken',
+                },
+              )
+              .timeout(const Duration(seconds: 10));
+        } catch (e) {
+          debugPrint('Logout API call failed: $e');
+        }
+      }
+
       _isAuthenticated = false;
       _currentUser = null;
       _authToken = null;
       _rememberMe = false;
+
+      // Clear API token
+      ApiConfig.setAuthToken(null);
 
       // Clear storage
       final prefs = await SharedPreferences.getInstance();
@@ -289,6 +272,12 @@ class AuthProvider extends ChangeNotifier {
       notifyListeners();
     } catch (e) {
       debugPrint('Logout error: $e');
+      // Still clear local state even if API call fails
+      _isAuthenticated = false;
+      _currentUser = null;
+      _authToken = null;
+      _rememberMe = false;
+      notifyListeners();
     }
   }
 
@@ -320,11 +309,40 @@ class AuthProvider extends ChangeNotifier {
         };
       }
 
-      // TODO: Call backend API to change password
-      await Future.delayed(const Duration(seconds: 1));
+      // Call backend API to change password
+      final userId = _currentUser?['id'] ?? 1;
+      final path = '/user/update/$userId';
+      final uri = _buildUri(path);
+      final response = await http
+          .put(
+            uri,
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': 'Bearer $_authToken',
+            },
+            body: json.encode({
+              'password': oldPassword,
+              'new_password': newPassword,
+            }),
+          )
+          .timeout(const Duration(seconds: 10));
 
-      // Simulate successful password change
-      return {'success': true, 'message': 'Password changed successfully'};
+      if (response.statusCode == 200) {
+        return {'success': true, 'message': 'Password changed successfully'};
+      } else if (response.statusCode == 401) {
+        return {'success': false, 'message': 'Current password is incorrect'};
+      } else if (response.statusCode == 400) {
+        final data = json.decode(response.body);
+        return {
+          'success': false,
+          'message': data['error'] ?? 'Invalid password change request',
+        };
+      } else {
+        return {
+          'success': false,
+          'message': 'Failed to change password: ${response.statusCode}',
+        };
+      }
     } catch (e) {
       debugPrint('Change password error: $e');
       return {
@@ -338,119 +356,49 @@ class AuthProvider extends ChangeNotifier {
   /// Returns: {'success': bool, 'message': String}
   Future<Map<String, dynamic>> requestPasswordReset(String identifier) async {
     try {
-      // Simulate API call delay
-      await Future.delayed(const Duration(seconds: 1));
-
       // Validate input
       if (identifier.isEmpty) {
         return {'success': false, 'message': 'Please enter username or email'};
       }
 
-      // Get registered users from storage
-      final prefs = await SharedPreferences.getInstance();
-      final registeredUsers = prefs.getStringList('registered_users') ?? [];
+      // Call backend API to request password reset
+      final path = '/auth/forgot-password';
+      final uri = _buildUri(path);
+      final response = await http
+          .post(
+            uri,
+            headers: {'Content-Type': 'application/json'},
+            body: json.encode({'username_or_email': identifier}),
+          )
+          .timeout(const Duration(seconds: 10));
 
-      // Search for user by username or email
-      String? foundUserEmail;
-      String? foundUsername;
-      for (final userStr in registeredUsers) {
-        final parts = userStr.split('|');
-        if (parts.length >= 2) {
-          final username = parts[0];
-          final email = parts[1];
-
-          // Check if identifier matches username or email
-          if (username.toLowerCase() == identifier.toLowerCase() ||
-              email.toLowerCase() == identifier.toLowerCase()) {
-            foundUserEmail = email;
-            foundUsername = username;
-            break;
-          }
-        }
-      }
-
-      // Also check for admin user
-      if (foundUserEmail == null) {
-        if (identifier.toLowerCase() == 'admin' ||
-            identifier.toLowerCase() == 'admin@elibrary.local') {
-          foundUserEmail = 'admin@elibrary.local';
-          foundUsername = 'admin';
-        }
-      }
-
-      // foundUserEmail = 'test';
-
-      // User not found
-      if (foundUserEmail == null) {
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        return {
+          'success': true,
+          'message':
+              'Password reset link has been sent to your email. '
+              'Please check your inbox and follow the instructions to reset your password.',
+          'email': data['email'] ?? identifier,
+        };
+      } else if (response.statusCode == 404) {
         return {
           'success': false,
           'message':
               'No account found with the username or email: "$identifier"',
         };
+      } else {
+        return {
+          'success': false,
+          'message': 'Failed to request password reset: ${response.statusCode}',
+        };
       }
-
-      // TODO: Call backend API to send password reset email
-      // Example API endpoint: POST /api/auth/forgot-password
-      // Request body: { "username_or_email": identifier }
-      // Response: { "success": true, "message": "Reset email sent" }
-
-      // Simulate successful password reset request
-      return {
-        'success': true,
-        'message':
-            'Password reset link has been sent to $foundUserEmail. '
-            'Please check your inbox and follow the instructions to reset your password.',
-        'email': foundUserEmail,
-        'username': foundUsername,
-      };
     } catch (e) {
       debugPrint('Error requesting password reset: $e');
       return {
         'success': false,
         'message': 'An error occurred: ${e.toString()}',
       };
-    }
-  }
-
-  /// Helper method to find user by username or email
-  Future<Map<String, dynamic>?> findUserByIdentifier(String identifier) async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      final registeredUsers = prefs.getStringList('registered_users') ?? [];
-
-      for (final userStr in registeredUsers) {
-        final parts = userStr.split('|');
-        if (parts.length >= 2) {
-          final username = parts[0];
-          final email = parts[1];
-
-          if (username.toLowerCase() == identifier.toLowerCase() ||
-              email.toLowerCase() == identifier.toLowerCase()) {
-            return {
-              'id': registeredUsers.indexOf(userStr),
-              'username': username,
-              'email': email,
-              'role': parts.length > 3 ? parts[3] : 'user',
-            };
-          }
-        }
-      }
-
-      // Check admin user
-      if (identifier.toLowerCase() == 'admin' ||
-          identifier.toLowerCase() == 'admin@elibrary.local') {
-        return {
-          'id': 0,
-          'username': 'admin',
-          'email': 'admin@elibrary.local',
-          'role': 'admin',
-        };
-      }
-
-      return null;
-    } catch (e) {
-      debugPrint('Error finding user: $e');
-      return null;
     }
   }
 
@@ -465,8 +413,9 @@ class AuthProvider extends ChangeNotifier {
 
       if (_currentUser != null) {
         // Serialize user data (simple format: id|username|email|role|displayName)
+        final role = _currentUser!['is_admin'] == true ? 'admin' : 'user';
         final userData =
-            '${_currentUser!['id']}|${_currentUser!['username']}|${_currentUser!['email']}|${_currentUser!['role']}|${_currentUser!['displayName']}';
+            '${_currentUser!['id']}|${_currentUser!['username']}|${_currentUser!['email']}|$role|${_currentUser!['displayName']}';
         await prefs.setString(_userDataKey, userData);
       }
 
@@ -498,8 +447,4 @@ class AuthProvider extends ChangeNotifier {
 
     notifyListeners();
   }
-}
-
-extension on Uri {
-  operator +(Uri other) {}
 }

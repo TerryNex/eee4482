@@ -33,6 +33,15 @@ class ApiConfig {
     return '$baseUrl$endpoint';
   }
 
+  /// Get authorization headers with JWT token
+  static Map<String, String> getAuthorizationHeaders() {
+    final headers = <String, String>{'Content-Type': 'application/json'};
+    if (authToken != null && authToken!.isNotEmpty) {
+      headers['Authorization'] = 'Bearer $authToken';
+    }
+    return headers;
+  }
+
   /// Set proxy configuration
   static void setProxy({
     required bool enabled,
