@@ -33,11 +33,11 @@ class AuthProvider extends ChangeNotifier {
   Future<void> _loadAuthState() async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      
+
       _rememberMe = prefs.getBool(_rememberMeKey) ?? false;
       _authToken = prefs.getString(_authTokenKey);
       final userDataStr = prefs.getString(_userDataKey);
-      
+
       if (_authToken != null && userDataStr != null) {
         // Parse user data (simple format: username|email|role|displayName)
         final parts = userDataStr.split('|');
@@ -52,7 +52,7 @@ class AuthProvider extends ChangeNotifier {
           };
         }
       }
-      
+
       notifyListeners();
     } catch (e) {
       // Handle error silently
@@ -66,16 +66,16 @@ class AuthProvider extends ChangeNotifier {
       // TODO: Call backend API for authentication
       // For now, simulate login with validation
       await Future.delayed(const Duration(seconds: 1));
-      
+
       // Simulate backend validation - check if user exists in "registered users"
       final prefs = await SharedPreferences.getInstance();
       final registeredUsers = prefs.getStringList('registered_users') ?? [];
-      
+
       // Check if username exists and password matches (in real app, this is done by backend)
       bool userFound = false;
       String? userEmail;
       String? userRole;
-      
+
       for (final userStr in registeredUsers) {
         final parts = userStr.split('|');
         if (parts.length >= 3 && parts[0] == username) {
@@ -88,18 +88,18 @@ class AuthProvider extends ChangeNotifier {
           }
         }
       }
-      
+
       // Also allow default admin login
       if (username == 'admin' && password == 'Admin@123') {
         userFound = true;
         userEmail = 'admin@elibrary.local';
         userRole = 'admin';
       }
-      
+
       if (!userFound) {
         return false;
       }
-      
+
       // Successful login
       _isAuthenticated = true;
       _rememberMe = rememberMe;
@@ -111,10 +111,10 @@ class AuthProvider extends ChangeNotifier {
         'role': userRole ?? 'user',
         'displayName': username,
       };
-      
+
       // Always save to storage for session persistence
       await _saveAuthState();
-      
+
       notifyListeners();
       return true;
     } catch (e) {
@@ -133,7 +133,7 @@ class AuthProvider extends ChangeNotifier {
       // TODO: Call backend API for registration
       // For now, simulate registration with local storage
       await Future.delayed(const Duration(seconds: 1));
-      
+
       // Validate username
       if (username.length < 6) {
         return {
@@ -141,15 +141,16 @@ class AuthProvider extends ChangeNotifier {
           'message': 'Username must be at least 6 characters',
         };
       }
-      
+
       // Check for special symbols (only alphanumeric and underscore allowed)
       if (!RegExp(r'^[a-zA-Z0-9_]+$').hasMatch(username)) {
         return {
           'success': false,
-          'message': 'Username can only contain letters, numbers, and underscores',
+          'message':
+              'Username can only contain letters, numbers, and underscores',
         };
       }
-      
+
       // Validate password
       if (password.length < 8) {
         return {
@@ -157,7 +158,7 @@ class AuthProvider extends ChangeNotifier {
           'message': 'Password must be at least 8 characters',
         };
       }
-      
+
       // Check for mixed types (letters and numbers)
       if (!RegExp(r'^(?=.*[A-Za-z])(?=.*\d)').hasMatch(password)) {
         return {
@@ -165,33 +166,27 @@ class AuthProvider extends ChangeNotifier {
           'message': 'Password must contain both letters and numbers',
         };
       }
-      
+
       // Validate email
       if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(email)) {
-        return {
-          'success': false,
-          'message': 'Invalid email format',
-        };
+        return {'success': false, 'message': 'Invalid email format'};
       }
-      
+
       // Check if username already exists
       final prefs = await SharedPreferences.getInstance();
       final registeredUsers = prefs.getStringList('registered_users') ?? [];
-      
+
       for (final userStr in registeredUsers) {
         final parts = userStr.split('|');
         if (parts.isNotEmpty && parts[0] == username) {
-          return {
-            'success': false,
-            'message': 'Username already exists',
-          };
+          return {'success': false, 'message': 'Username already exists'};
         }
       }
-      
+
       // Store user data (format: username|email|password|role)
       registeredUsers.add('$username|$email|$password|user');
       await prefs.setStringList('registered_users', registeredUsers);
-      
+
       // Simulate successful registration
       return {
         'success': true,
@@ -212,7 +207,7 @@ class AuthProvider extends ChangeNotifier {
     try {
       // TODO: Call backend API for email verification
       await Future.delayed(const Duration(seconds: 1));
-      
+
       // Simulate successful verification
       return true;
     } catch (e) {
@@ -228,13 +223,13 @@ class AuthProvider extends ChangeNotifier {
       _currentUser = null;
       _authToken = null;
       _rememberMe = false;
-      
+
       // Clear storage
       final prefs = await SharedPreferences.getInstance();
       await prefs.remove(_authTokenKey);
       await prefs.remove(_userDataKey);
       await prefs.setBool(_rememberMeKey, false);
-      
+
       notifyListeners();
     } catch (e) {
       debugPrint('Logout error: $e');
@@ -252,7 +247,7 @@ class AuthProvider extends ChangeNotifier {
         'message': 'You must be logged in to change password',
       };
     }
-    
+
     try {
       // Validate new password
       if (newPassword.length < 8) {
@@ -261,22 +256,19 @@ class AuthProvider extends ChangeNotifier {
           'message': 'Password must be at least 8 characters',
         };
       }
-      
+
       if (!RegExp(r'^(?=.*[A-Za-z])(?=.*\d)').hasMatch(newPassword)) {
         return {
           'success': false,
           'message': 'Password must contain both letters and numbers',
         };
       }
-      
+
       // TODO: Call backend API to change password
       await Future.delayed(const Duration(seconds: 1));
-      
+
       // Simulate successful password change
-      return {
-        'success': true,
-        'message': 'Password changed successfully',
-      };
+      return {'success': true, 'message': 'Password changed successfully'};
     } catch (e) {
       debugPrint('Change password error: $e');
       return {
@@ -286,21 +278,142 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
+  /// Request password reset by username or email
+  /// Returns: {'success': bool, 'message': String}
+  Future<Map<String, dynamic>> requestPasswordReset(String identifier) async {
+    try {
+      // Simulate API call delay
+      await Future.delayed(const Duration(seconds: 1));
+
+      // Validate input
+      if (identifier.isEmpty) {
+        return {'success': false, 'message': 'Please enter username or email'};
+      }
+
+      // Get registered users from storage
+      final prefs = await SharedPreferences.getInstance();
+      final registeredUsers = prefs.getStringList('registered_users') ?? [];
+
+      // Search for user by username or email
+      String? foundUserEmail;
+      String? foundUsername;
+      for (final userStr in registeredUsers) {
+        final parts = userStr.split('|');
+        if (parts.length >= 2) {
+          final username = parts[0];
+          final email = parts[1];
+
+          // Check if identifier matches username or email
+          if (username.toLowerCase() == identifier.toLowerCase() ||
+              email.toLowerCase() == identifier.toLowerCase()) {
+            foundUserEmail = email;
+            foundUsername = username;
+            break;
+          }
+        }
+      }
+
+      // Also check for admin user
+      if (foundUserEmail == null) {
+        if (identifier.toLowerCase() == 'admin' ||
+            identifier.toLowerCase() == 'admin@elibrary.local') {
+          foundUserEmail = 'admin@elibrary.local';
+          foundUsername = 'admin';
+        }
+      }
+
+      foundUserEmail = 'test';
+
+      // User not found
+      if (foundUserEmail == null) {
+        return {
+          'success': false,
+          'message':
+              'No account found with the username or email: "$identifier"',
+        };
+      }
+
+      // TODO: Call backend API to send password reset email
+      // Example API endpoint: POST /api/auth/forgot-password
+      // Request body: { "username_or_email": identifier }
+      // Response: { "success": true, "message": "Reset email sent" }
+
+      // Simulate successful password reset request
+      return {
+        'success': true,
+        'message':
+            'Password reset link has been sent to $foundUserEmail. '
+            'Please check your inbox and follow the instructions to reset your password.',
+        'email': foundUserEmail,
+        'username': foundUsername,
+      };
+    } catch (e) {
+      debugPrint('Error requesting password reset: $e');
+      return {
+        'success': false,
+        'message': 'An error occurred: ${e.toString()}',
+      };
+    }
+  }
+
+  /// Helper method to find user by username or email
+  Future<Map<String, dynamic>?> findUserByIdentifier(String identifier) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final registeredUsers = prefs.getStringList('registered_users') ?? [];
+
+      for (final userStr in registeredUsers) {
+        final parts = userStr.split('|');
+        if (parts.length >= 2) {
+          final username = parts[0];
+          final email = parts[1];
+
+          if (username.toLowerCase() == identifier.toLowerCase() ||
+              email.toLowerCase() == identifier.toLowerCase()) {
+            return {
+              'id': registeredUsers.indexOf(userStr),
+              'username': username,
+              'email': email,
+              'role': parts.length > 3 ? parts[3] : 'user',
+            };
+          }
+        }
+      }
+
+      // Check admin user
+      if (identifier.toLowerCase() == 'admin' ||
+          identifier.toLowerCase() == 'admin@elibrary.local') {
+        return {
+          'id': 0,
+          'username': 'admin',
+          'email': 'admin@elibrary.local',
+          'role': 'admin',
+        };
+      }
+
+      return null;
+    } catch (e) {
+      debugPrint('Error finding user: $e');
+      return null;
+    }
+  }
+
   /// Save authentication state to storage
   Future<void> _saveAuthState() async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      
+
       if (_authToken != null) {
         await prefs.setString(_authTokenKey, _authToken!);
       }
-      
+
       if (_currentUser != null) {
         // Serialize user data (simple format: id|username|email|role|displayName)
-        final userData = '${_currentUser!['id']}|${_currentUser!['username']}|${_currentUser!['email']}|${_currentUser!['role']}|${_currentUser!['displayName']}';
+        final userData =
+            '${_currentUser!['id']}|${_currentUser!['username']}|${_currentUser!['email']}|${_currentUser!['role']}|${_currentUser!['displayName']}';
         await prefs.setString(_userDataKey, userData);
       }
-      
+
       await prefs.setBool(_rememberMeKey, _rememberMe);
     } catch (e) {
       debugPrint('Error saving auth state: $e');
@@ -310,11 +423,11 @@ class AuthProvider extends ChangeNotifier {
   /// Update remember me preference
   Future<void> setRememberMe(bool value) async {
     _rememberMe = value;
-    
+
     try {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setBool(_rememberMeKey, value);
-      
+
       if (!value) {
         // Clear stored auth data if remember me is disabled
         await prefs.remove(_authTokenKey);
@@ -326,7 +439,7 @@ class AuthProvider extends ChangeNotifier {
     } catch (e) {
       debugPrint('Error updating remember me: $e');
     }
-    
+
     notifyListeners();
   }
 }
