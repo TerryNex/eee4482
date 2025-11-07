@@ -102,10 +102,13 @@ class AuthProvider extends ChangeNotifier {
         _authToken = token; // JWT token from backend
 
         _currentUser = {
-          'id': data['user_id'] ?? 1,
+          'id': int.tryParse(data['user_id']?.toString() ?? '1') ?? 1,
           'username': data['username'] ?? username,
           'email': data['email'] ?? '$username@placeholder.com',
-          'is_admin': data['is_admin'] == 1 || data['is_admin'] == true,
+          'is_admin': data['is_admin'] == 1 || 
+                      data['is_admin'] == '1' || 
+                      data['is_admin'] == true || 
+                      data['is_admin'] == 'true',
           'last_login': data['last_login'],
           'displayName': data['username'] ?? username,
         };
