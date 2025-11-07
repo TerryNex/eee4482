@@ -4,6 +4,7 @@
 
 import '../config/api_config.dart';
 import 'api_service.dart';
+import 'dart:convert';
 
 /// Book Service class for managing book operations
 class BookService {
@@ -12,7 +13,7 @@ class BookService {
   static Future<List<Map<String, dynamic>>> getAllBooks() async {
     try {
       final response = await ApiService.get(ApiConfig.getAllBooksEndpoint);
-      
+
       // Handle different response formats
       if (response is List) {
         return List<Map<String, dynamic>>.from(response);
@@ -21,7 +22,7 @@ class BookService {
       } else if (response is Map && response.containsKey('books')) {
         return List<Map<String, dynamic>>.from(response['books']);
       }
-      
+
       return [];
     } catch (e) {
       rethrow;
@@ -30,17 +31,19 @@ class BookService {
 
   /// Add a new book
   /// Takes a book map and returns the created book data
-  static Future<Map<String, dynamic>> addBook(Map<String, dynamic> bookData) async {
+  static Future<Map<String, dynamic>> addBook(
+    Map<String, dynamic> bookData,
+  ) async {
     try {
       final response = await ApiService.post(
         ApiConfig.addBookEndpoint,
         body: bookData,
       );
-      
+
       if (response is Map) {
         return Map<String, dynamic>.from(response);
       }
-      
+
       return {'success': true, 'message': 'Book added successfully'};
     } catch (e) {
       rethrow;
@@ -58,12 +61,15 @@ class BookService {
         '${ApiConfig.updateBookEndpoint}/$bookId',
         body: bookData,
       );
-      
+
       if (response is Map) {
         return Map<String, dynamic>.from(response);
       }
-      
-      return {'success': true, 'message': 'Book updated successfully'};
+      final body = json.decode(response.body);
+      final msg =
+          body['message'] ?? body['error'] ?? 'Book updated successfully';
+
+      return {'success': true, 'message': msg};
     } catch (e) {
       rethrow;
     }
@@ -76,11 +82,11 @@ class BookService {
       final response = await ApiService.delete(
         '${ApiConfig.deleteBookEndpoint}/$bookId',
       );
-      
+
       if (response is Map) {
         return Map<String, dynamic>.from(response);
       }
-      
+
       return {'success': true, 'message': 'Book deleted successfully'};
     } catch (e) {
       rethrow;
@@ -93,11 +99,11 @@ class BookService {
       final response = await ApiService.get(
         '${ApiConfig.getAllBooksEndpoint}/$bookId',
       );
-      
+
       if (response is Map) {
         return Map<String, dynamic>.from(response);
       }
-      
+
       return null;
     } catch (e) {
       rethrow;
@@ -111,13 +117,13 @@ class BookService {
         ApiConfig.getAllBooksEndpoint,
         queryParameters: {'search': query},
       );
-      
+
       if (response is List) {
         return List<Map<String, dynamic>>.from(response);
       } else if (response is Map && response.containsKey('data')) {
         return List<Map<String, dynamic>>.from(response['data']);
       }
-      
+
       return [];
     } catch (e) {
       rethrow;

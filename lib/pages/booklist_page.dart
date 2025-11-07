@@ -76,9 +76,10 @@ class _BooklistPageState extends State<BooklistPage> {
   Widget createSingleBookRecord(Map<String, dynamic> book) {
     // Get status from API (0 = available, 1 = borrowed)
     final status = book['status'] ?? 0;
-    final isAvailable = (status is int ? status : int.tryParse(status.toString())) == 0;
+    final isAvailable =
+        (status is int ? status : int.tryParse(status.toString())) == 0;
     final bookId = book['book_id'] as int?;
-    
+
     return Card(
       child: ListTile(
         enabled: isAvailable,
@@ -133,10 +134,10 @@ class _BooklistPageState extends State<BooklistPage> {
     final now = DateTime.now();
     final authProvider = context.read<AuthProvider>();
     final username = authProvider.currentUser?['username'] ?? 'Unknown User';
-    
+
     // Default due date: 30 days from now
     DateTime selectedDueDate = now.add(const Duration(days: 30));
-    
+
     showDialog<String>(
       context: context,
       builder: (BuildContext context) {
@@ -166,7 +167,9 @@ class _BooklistPageState extends State<BooklistPage> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text("Due Date: ${selectedDueDate.toString().split(' ')[0]}"),
+                        Text(
+                          "Due Date: ${selectedDueDate.toString().split(' ')[0]}",
+                        ),
                         TextButton.icon(
                           icon: const Icon(Icons.calendar_today),
                           label: const Text('Change'),
@@ -195,7 +198,10 @@ class _BooklistPageState extends State<BooklistPage> {
                       ),
                       child: Row(
                         children: [
-                          Icon(Icons.info_outline, color: Colors.orange.shade700),
+                          Icon(
+                            Icons.info_outline,
+                            color: Colors.orange.shade700,
+                          ),
                           const SizedBox(width: 8),
                           Expanded(
                             child: Text(
@@ -253,7 +259,9 @@ class _BooklistPageState extends State<BooklistPage> {
           content: Container(
             width: 400,
             height: 400,
-            child: SingleChildScrollView(child: BookForm(mode: 1)),
+            child: SingleChildScrollView(
+              child: BookForm(mode: 1, bookId: book['book_id'] ?? -1),
+            ),
           ),
           actions: [
             TextButton(
@@ -270,7 +278,7 @@ class _BooklistPageState extends State<BooklistPage> {
 
   void popupDeleteDialog(Map<String, dynamic> book) {
     final bookId = book['book_id'] as int?;
-    
+
     showDialog<String>(
       context: context,
       builder: (BuildContext context) {
@@ -290,10 +298,16 @@ class _BooklistPageState extends State<BooklistPage> {
               onPressed: () async {
                 Navigator.of(context).pop();
                 if (bookId != null) {
-                  final success = await context.read<BookProvider>().deleteBook(bookId);
+                  final success = await context.read<BookProvider>().deleteBook(
+                    bookId,
+                  );
                   if (success && context.mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Deleted "${book['title'] ?? 'Unknown'}".')),
+                      SnackBar(
+                        content: Text(
+                          'Deleted "${book['title'] ?? 'Unknown'}".',
+                        ),
+                      ),
                     );
                   } else if (context.mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(

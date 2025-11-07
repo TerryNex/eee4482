@@ -9,7 +9,7 @@ class BookForm extends StatefulWidget {
   final int bookId;
   final Map<String, dynamic>? initialData;
   final VoidCallback? onSuccess;
-  
+
   const BookForm({
     super.key,
     required this.mode,
@@ -74,7 +74,7 @@ class _BookFormState extends State<BookForm> {
     try {
       final bookData = {
         'title': _titleController.text.trim(),
-        'author': _authorController.text.trim(),
+        'authors': _authorController.text.trim(),
         'publishers': _publishersController.text.trim(),
         'date': _dateController.text.trim(),
         'isbn': _isbnController.text.trim(),
@@ -97,11 +97,14 @@ class _BookFormState extends State<BookForm> {
         }
       } else {
         // Update existing book
-        await BookService.updateBook(widget.bookId, bookData);
+        final result = await BookService.updateBook(widget.bookId, bookData);
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('Successfully updated "${_titleController.text}"'),
+              content: Text(
+                result['message'] ??
+                    'Successfully updated "${_titleController.text}"',
+              ),
               backgroundColor: Colors.green,
             ),
           );
@@ -116,10 +119,7 @@ class _BookFormState extends State<BookForm> {
           _errorMessage = e.message;
         });
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(e.message),
-            backgroundColor: Colors.red,
-          ),
+          SnackBar(content: Text(e.message), backgroundColor: Colors.red),
         );
       }
     } catch (e) {
@@ -189,28 +189,36 @@ class _BookFormState extends State<BookForm> {
             name: 'Title',
             hint: 'Enter book title',
             controller: _titleController,
-            validator: Validators.bookTitle,
+            validator: widget.mode == 0
+                ? Validators.bookTitle
+                : ((value) => null),
             enabled: !_isLoading,
           ),
           InputBox(
             name: 'Author',
             hint: 'Enter author name',
             controller: _authorController,
-            validator: Validators.authorName,
+            validator: widget.mode == 0
+                ? Validators.authorName
+                : ((value) => null),
             enabled: !_isLoading,
           ),
           InputBox(
             name: 'Publisher',
             hint: 'Enter publisher name',
             controller: _publishersController,
-            validator: Validators.publisherName,
+            validator: widget.mode == 0
+                ? Validators.publisherName
+                : ((value) => null),
             enabled: !_isLoading,
           ),
           InputBox(
             name: 'Publication Date',
             hint: 'YYYY-MM-DD (e.g., 1996-06-26)',
             controller: _dateController,
-            validator: Validators.publicationDate,
+            validator: widget.mode == 0
+                ? Validators.publicationDate
+                : ((value) => null),
             keyboardType: TextInputType.datetime,
             enabled: !_isLoading,
           ),
@@ -218,11 +226,18 @@ class _BookFormState extends State<BookForm> {
             name: 'ISBN',
             hint: 'e.g., 978-3-16-148410-0',
             controller: _isbnController,
-            validator: Validators.isbnRequired,
+            validator: widget.mode == 0
+                ? Validators.isbnRequired
+                : ((value) => null),
             enabled: !_isLoading,
           ),
           Container(
-            margin: const EdgeInsets.only(left: 20, top: 10, bottom: 10, right: 20),
+            margin: const EdgeInsets.only(
+              left: 20,
+              top: 10,
+              bottom: 10,
+              right: 20,
+            ),
             alignment: Alignment.centerLeft,
             child: ElevatedButton(
               style: ElevatedButton.styleFrom(
@@ -247,4 +262,3 @@ class _BookFormState extends State<BookForm> {
     );
   }
 }
-
