@@ -153,12 +153,23 @@ Don't have Flutter installed locally? Use GitHub Actions!
 - **Fix**: Run `flutter clean && flutter pub get`
 
 ### CORS errors in development
-- **Solution**: Use a development proxy (see README.md)
+- **Solution**: Use a development proxy (see [Configuration Guide](docs/CONFIGURATION_GUIDE.md))
 - **Alternative**: Deploy to server for production
+
+## Configuration
+
+For API and Proxy settings:
+- **Quick Config**: Use Settings page (gear icon) in the app
+- **Detailed Guide**: See [Configuration Guide](docs/CONFIGURATION_GUIDE.md)
+- **Database Setup**: See [Database README](database/README.md)
 
 ## Need More Help?
 
 📖 **Full Documentation**: See [README.md](README.md)
+
+⚙️ **Configuration Guide**: See [Configuration Guide](docs/CONFIGURATION_GUIDE.md)
+
+🗄️ **Database Setup**: See [Database README](database/README.md)
 
 📚 **Project Requirements**: See `docs/Worksheet7g_v1.3.docx`
 

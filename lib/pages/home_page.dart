@@ -3,6 +3,7 @@
 
 import 'package:flutter/material.dart';
 import '../widgets/navigation_frame.dart';
+import '../widgets/personal_info.dart';
 
 /// HomePage widget displays the landing page of the e-Library application
 /// Shows the application title and student information
@@ -24,12 +25,26 @@ class _HomePageState extends State<HomePage> {
     return Scaffold(
       body: NavigationFrame(
         selectedIndex: 0,
-        child: Container(
-          child: Text(
-            'EEE4482 e-Library\nWelcome, ' + username,
-            textAlign: TextAlign.center,
-            style: TextStyle(fontSize: 48, fontWeight: FontWeight.bold),
-          ),
+        child: Column(
+          children: [
+            PersonalInfoWidget(),
+            Expanded(
+              child: Container(
+                child: Column(
+                  children: [
+                    Text(
+                      'EEE4482 e-Library\nWelcome, ' + username,
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 48,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );

@@ -8,6 +8,7 @@ import '../widgets/navigation_frame.dart';
 import '../themes/theme_provider.dart';
 import '../themes/app_themes.dart';
 import '../config/settings_provider.dart';
+import '../widgets/personal_info.dart';
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
@@ -20,14 +21,17 @@ class _SettingsPageState extends State<SettingsPage> {
   final TextEditingController _apiUrlController = TextEditingController();
   final TextEditingController _proxyHostController = TextEditingController();
   final TextEditingController _proxyPortController = TextEditingController();
-  
+
   bool _useProxy = false;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
+      final settingsProvider = Provider.of<SettingsProvider>(
+        context,
+        listen: false,
+      );
       _apiUrlController.text = settingsProvider.apiBaseUrl;
       _useProxy = settingsProvider.useProxy;
       _proxyHostController.text = settingsProvider.proxyHost;
@@ -47,28 +51,38 @@ class _SettingsPageState extends State<SettingsPage> {
   Widget build(BuildContext context) {
     return NavigationFrame(
       selectedIndex: 3,
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
-        child: Container(
-          constraints: const BoxConstraints(maxWidth: 800),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                'Settings',
-                style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold),
+      child: Column(
+        children: [
+          PersonalInfoWidget(),
+          Expanded(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(20),
+              child: Container(
+                constraints: const BoxConstraints(maxWidth: 800),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Settings',
+                      style: TextStyle(
+                        fontSize: 32,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 30),
+                    _buildThemeSection(),
+                    const SizedBox(height: 30),
+                    _buildApiSection(),
+                    const SizedBox(height: 30),
+                    _buildProxySection(),
+                    const SizedBox(height: 30),
+                    _buildActionButtons(),
+                  ],
+                ),
               ),
-              const SizedBox(height: 30),
-              _buildThemeSection(),
-              const SizedBox(height: 30),
-              _buildApiSection(),
-              const SizedBox(height: 30),
-              _buildProxySection(),
-              const SizedBox(height: 30),
-              _buildActionButtons(),
-            ],
+            ),
           ),
-        ),
+        ],
       ),
     );
   }
@@ -229,7 +243,10 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 
   void _saveSettings() async {
-    final settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
+    final settingsProvider = Provider.of<SettingsProvider>(
+      context,
+      listen: false,
+    );
 
     // Validate inputs
     if (_apiUrlController.text.isEmpty) {
@@ -284,7 +301,10 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 
   void _resetSettings() async {
-    final settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
+    final settingsProvider = Provider.of<SettingsProvider>(
+      context,
+      listen: false,
+    );
     final themeProvider = Provider.of<ThemeProvider>(context, listen: false);
 
     // Show confirmation dialog
@@ -292,7 +312,9 @@ class _SettingsPageState extends State<SettingsPage> {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Reset Settings'),
-        content: const Text('Are you sure you want to reset all settings to defaults?'),
+        content: const Text(
+          'Are you sure you want to reset all settings to defaults?',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),

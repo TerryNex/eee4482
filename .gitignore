@@ -22,7 +22,17 @@ migrate_working_dir/
 .vscode/
 
 # Project-specific files to ignore
+# Database backups and sensitive data
+database/*.backup
+database/*_backup.sql
+database/*.bak
+*.sql.gz
+*.sql.zip
 
+# Local configuration overrides (if any)
+config.local.dart
+.env
+.env.local
 
 # Flutter/Dart/Pub related
 **/doc/api/
