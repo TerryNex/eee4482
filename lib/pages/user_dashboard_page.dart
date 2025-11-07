@@ -2,6 +2,7 @@
 /// Displays personal info, borrowing history, and favorited books
 /// Student: HE HUALIANG (230263367)
 
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
@@ -379,7 +380,7 @@ class _UserDashboardPageState extends State<UserDashboardPage> {
                   crossAxisSpacing: 16,
                   mainAxisSpacing: 16,
                 ),
-                itemCount: favoritedBooks.length > 6 ? 6 : favoritedBooks.length,
+                itemCount: math.min(favoritedBooks.length, 6),
                 itemBuilder: (context, index) {
                   return _buildBookCard(favoritedBooks[index]);
                 },

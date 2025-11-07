@@ -46,7 +46,8 @@ class _BookCarouselState extends State<BookCarousel> {
     _autoScrollTimer?.cancel();
     _autoScrollTimer = Timer.periodic(widget.autoScrollDuration, (timer) {
       if (!_isHovering && widget.books.isNotEmpty && mounted) {
-        final nextPage = (_currentPage + 1) % widget.books.length;
+        final currentPageIndex = _pageController.page?.round() ?? _currentPage;
+        final nextPage = (currentPageIndex + 1) % widget.books.length;
         _pageController.animateToPage(
           nextPage,
           duration: widget.transitionDuration,
@@ -100,7 +101,7 @@ class _BookCarouselState extends State<BookCarousel> {
               builder: (context, child) {
                 double value = 1.0;
                 if (_pageController.position.haveDimensions) {
-                  value = _pageController.page! - index;
+                  value = (_pageController.page ?? 0.0) - index;
                   value = (1 - (value.abs() * 0.3)).clamp(0.7, 1.0);
                 }
 

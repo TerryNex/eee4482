@@ -59,9 +59,9 @@ class _HomePageState extends State<HomePage> {
                     Padding(
                       padding: const EdgeInsets.symmetric(vertical: 40),
                       child: Text(
-                        'EEE4482 e-Library\nWelcome, ' + username,
+                        'EEE4482 e-Library\nWelcome, $username',
                         textAlign: TextAlign.center,
-                        style: TextStyle(
+                        style: const TextStyle(
                           fontSize: 48,
                           fontWeight: FontWeight.bold,
                         ),
@@ -73,7 +73,7 @@ class _HomePageState extends State<HomePage> {
                       padding: const EdgeInsets.symmetric(vertical: 20),
                       child: Column(
                         children: [
-                          Text(
+                          const Text(
                             'Featured Books',
                             style: TextStyle(
                               fontSize: 24,
@@ -97,7 +97,7 @@ class _HomePageState extends State<HomePage> {
                                     child: Column(
                                       mainAxisAlignment: MainAxisAlignment.center,
                                       children: [
-                                        Icon(Icons.error, size: 48, color: Colors.red),
+                                        const Icon(Icons.error, size: 48, color: Colors.red),
                                         const SizedBox(height: 16),
                                         Text('Error loading books: ${bookProvider.error}'),
                                         const SizedBox(height: 16),

@@ -32,7 +32,7 @@ class _BooklistPageState extends State<BooklistPage> {
         child: Consumer<BookProvider>(
           builder: (context, bookProvider, child) {
             if (bookProvider.isLoading) {
-              return Center(child: CircularProgressIndicator());
+              return const Center(child: CircularProgressIndicator());
             }
 
             if (bookProvider.error != null) {
@@ -40,13 +40,13 @@ class _BooklistPageState extends State<BooklistPage> {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(Icons.error, size: 64, color: Colors.red),
-                    SizedBox(height: 16),
+                    const Icon(Icons.error, size: 64, color: Colors.red),
+                    const SizedBox(height: 16),
                     Text('Error: ${bookProvider.error}'),
-                    SizedBox(height: 16),
+                    const SizedBox(height: 16),
                     ElevatedButton(
                       onPressed: () => bookProvider.getAllBooks(),
-                      child: Text('Retry'),
+                      child: const Text('Retry'),
                     ),
                   ],
                 ),
@@ -143,14 +143,14 @@ class _BooklistPageState extends State<BooklistPage> {
         return StatefulBuilder(
           builder: (context, setState) {
             return AlertDialog(
-              title: Text('Borrow Book'),
+              title: const Text('Borrow Book'),
               content: Container(
                 width: 400,
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
+                    const Text(
                       'Do you want to borrow this book?',
                       style: TextStyle(fontWeight: FontWeight.bold),
                     ),
@@ -168,8 +168,8 @@ class _BooklistPageState extends State<BooklistPage> {
                       children: [
                         Text("Due Date: ${selectedDueDate.toString().split(' ')[0]}"),
                         TextButton.icon(
-                          icon: Icon(Icons.calendar_today),
-                          label: Text('Change'),
+                          icon: const Icon(Icons.calendar_today),
+                          label: const Text('Change'),
                           onPressed: () async {
                             final picked = await showDatePicker(
                               context: context,
@@ -217,7 +217,7 @@ class _BooklistPageState extends State<BooklistPage> {
                   onPressed: () {
                     Navigator.of(context).pop();
                   },
-                  child: Text('Cancel'),
+                  child: const Text('Cancel'),
                 ),
                 TextButton(
                   onPressed: () {
@@ -226,15 +226,15 @@ class _BooklistPageState extends State<BooklistPage> {
                     // Expected endpoint: POST /books/borrow
                     // Body: { book_id: book['book_id'], due_date: selectedDueDate }
                     ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
+                      const SnackBar(
                         content: Text(
                           'Borrow functionality will be available once the backend API endpoint is implemented. See BACKEND_CHANGE_REQUIREMENTS.md for details.',
                         ),
-                        duration: const Duration(seconds: 5),
+                        duration: Duration(seconds: 5),
                       ),
                     );
                   },
-                  child: Text('Borrow'),
+                  child: const Text('Borrow'),
                 ),
               ],
             );
@@ -275,16 +275,16 @@ class _BooklistPageState extends State<BooklistPage> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text('Delete Book'),
+          title: const Text('Delete Book'),
           content: Text(
-            'Do you really want to delete "' + (book['title'] ?? 'Unknown') + '"?',
+            'Do you really want to delete "${book['title'] ?? 'Unknown'}"?',
           ),
           actions: <Widget>[
             TextButton(
               onPressed: () {
                 Navigator.of(context).pop();
               },
-              child: Text('Cancel'),
+              child: const Text('Cancel'),
             ),
             TextButton(
               onPressed: () async {
@@ -293,11 +293,11 @@ class _BooklistPageState extends State<BooklistPage> {
                   final success = await context.read<BookProvider>().deleteBook(bookId);
                   if (success && context.mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Deleted "' + (book['title'] ?? 'Unknown') + '".')),
+                      SnackBar(content: Text('Deleted "${book['title'] ?? 'Unknown'}".')),
                     );
                   } else if (context.mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
+                      const SnackBar(
                         content: Text('Failed to delete book'),
                         backgroundColor: Colors.red,
                       ),
@@ -305,7 +305,7 @@ class _BooklistPageState extends State<BooklistPage> {
                   }
                 }
               },
-              child: Text('Confirm'),
+              child: const Text('Confirm'),
             ),
           ],
         );
