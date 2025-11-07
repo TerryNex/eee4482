@@ -19,6 +19,8 @@ import 'pages/forgot_password_page.dart';
 import 'themes/theme_provider.dart';
 import 'config/settings_provider.dart';
 import 'providers/auth_provider.dart';
+import 'providers/book_provider.dart';
+import 'providers/favorite_provider.dart';
 
 /// Application entry point
 void main() {
@@ -28,6 +30,8 @@ void main() {
         ChangeNotifierProvider(create: (_) => ThemeProvider()),
         ChangeNotifierProvider(create: (_) => SettingsProvider()),
         ChangeNotifierProvider(create: (_) => AuthProvider()),
+        ChangeNotifierProvider(create: (_) => BookProvider()),
+        ChangeNotifierProvider(create: (_) => FavoriteProvider()),
       ],
       child: const App(),
     ),

@@ -1,36 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../widgets/navigation_frame.dart';
 import '../widgets/book_form.dart';
 import '../widgets/personal_info.dart';
+import '../providers/book_provider.dart';
+import '../providers/auth_provider.dart';
 
 class BooklistPage extends StatefulWidget {
-  List<Map<String, dynamic>> bookList = [
-    {
-      'title': 'Book 1',
-      'author': 'terry',
-      'publishers': 'terry',
-      'date': '1995-06-06',
-      'isbn': '123-4-5678-90123-4',
-      'status': '1',
-    },
-    {
-      'title': 'Book 2',
-      'author': 'alice',
-      'publishers': 'alice',
-      'date': '2000-01-01',
-      'isbn': '987-6-5432-10987-6',
-      'status': '0',
-    },
-    {
-      'title': 'Book 3',
-      'author': 'bob',
-      'publishers': 'bob',
-      'date': '2010-12-12',
-      'isbn': '456-7-8901-23456-7',
-      'status': '1',
-    },
-  ];
-
   BooklistPage({super.key});
 
   @override
@@ -39,12 +15,47 @@ class BooklistPage extends StatefulWidget {
 
 class _BooklistPageState extends State<BooklistPage> {
   @override
+  void initState() {
+    super.initState();
+    // Fetch books when page loads
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<BookProvider>().getAllBooks();
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     return NavigationFrame(
       selectedIndex: 2,
       child: Padding(
         padding: const EdgeInsets.all(10),
-        child: createBookLists(widget.bookList),
+        child: Consumer<BookProvider>(
+          builder: (context, bookProvider, child) {
+            if (bookProvider.isLoading) {
+              return Center(child: CircularProgressIndicator());
+            }
+
+            if (bookProvider.error != null) {
+              return Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.error, size: 64, color: Colors.red),
+                    SizedBox(height: 16),
+                    Text('Error: ${bookProvider.error}'),
+                    SizedBox(height: 16),
+                    ElevatedButton(
+                      onPressed: () => bookProvider.getAllBooks(),
+                      child: Text('Retry'),
+                    ),
+                  ],
+                ),
+              );
+            }
+
+            return createBookLists(bookProvider.books);
+          },
+        ),
       ),
     );
   }
@@ -63,33 +74,42 @@ class _BooklistPageState extends State<BooklistPage> {
   }
 
   Widget createSingleBookRecord(Map<String, dynamic> book) {
+    // Get status from API (0 = available, 1 = borrowed)
+    final status = book['status'] ?? 0;
+    final isAvailable = (status is int ? status : int.tryParse(status.toString())) == 0;
+    final bookId = book['book_id'] as int?;
+    
     return Card(
       child: ListTile(
-        enabled: int.parse(book['status']) == 0 ? true : false,
+        enabled: isAvailable,
         onTap: () {
-          popupBorrowDialog(book);
+          if (isAvailable) {
+            popupBorrowDialog(book);
+          }
         },
         leading: Icon(Icons.book, size: 48),
         title: Text(
-          book['title'],
+          book['title'] ?? 'Unknown',
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
         subtitle: Text(
           'Author: ' +
-              book['author'] +
+              (book['authors'] ?? 'Unknown') +
               '\nPublishers: ' +
-              book['publishers'] +
+              (book['publishers'] ?? 'Unknown') +
               '\nDate: ' +
-              book['date'] +
+              (book['date']?.toString() ?? 'Unknown') +
               '\nISBN: ' +
-              book['isbn'],
+              (book['isbn'] ?? 'Unknown') +
+              '\nStatus: ' +
+              (isAvailable ? 'Available' : 'Borrowed'),
         ),
         trailing: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
             IconButton(
               onPressed: () {
-                if (int.parse(book['status']) == 0) {
+                if (isAvailable && bookId != null) {
                   popupUpdateDialog(book);
                 }
               },
@@ -97,7 +117,7 @@ class _BooklistPageState extends State<BooklistPage> {
             ),
             IconButton(
               onPressed: () {
-                if (int.parse(book['status']) == 0) {
+                if (isAvailable && bookId != null) {
                   popupDeleteDialog(book);
                 }
               },
@@ -185,13 +205,15 @@ class _BooklistPageState extends State<BooklistPage> {
   }
 
   void popupDeleteDialog(Map<String, dynamic> book) {
+    final bookId = book['book_id'] as int?;
+    
     showDialog<String>(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
           title: Text('Delete Book'),
           content: Text(
-            'Do you really want to delete "' + book['title'] + '"?',
+            'Do you really want to delete "' + (book['title'] ?? 'Unknown') + '"?',
           ),
           actions: <Widget>[
             TextButton(
@@ -201,11 +223,23 @@ class _BooklistPageState extends State<BooklistPage> {
               child: Text('Cancel'),
             ),
             TextButton(
-              onPressed: () {
+              onPressed: () async {
                 Navigator.of(context).pop();
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('Deleted "' + book['title'] + '".')),
-                );
+                if (bookId != null) {
+                  final success = await context.read<BookProvider>().deleteBook(bookId);
+                  if (success && context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Deleted "' + (book['title'] ?? 'Unknown') + '".')),
+                    );
+                  } else if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Failed to delete book'),
+                        backgroundColor: Colors.red,
+                      ),
+                    );
+                  }
+                }
               },
               child: Text('Confirm'),
             ),

@@ -1,10 +1,11 @@
 /// User Dashboard Page
-/// Displays personal info, borrowing history, and liked books
+/// Displays personal info, borrowing history, and favorited books
 /// Student: HE HUALIANG (230263367)
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
+import '../providers/favorite_provider.dart';
 import '../widgets/navigation_frame.dart';
 import '../widgets/personal_info.dart';
 
@@ -16,7 +17,20 @@ class UserDashboardPage extends StatefulWidget {
 }
 
 class _UserDashboardPageState extends State<UserDashboardPage> {
-  // Sample data (TODO: Replace with actual API calls)
+  @override
+  void initState() {
+    super.initState();
+    // Load user's favorite books when dashboard loads
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final authProvider = context.read<AuthProvider>();
+      if (authProvider.isAuthenticated && authProvider.currentUser != null) {
+        final userId = authProvider.currentUser!['id'] as int;
+        context.read<FavoriteProvider>().getUserFavorites(userId);
+      }
+    });
+  }
+
+  // Sample borrowing history data (TODO: Replace with actual API call when endpoint is available)
   final List<Map<String, dynamic>> _borrowingHistory = [
     {
       'id': 1,
@@ -33,30 +47,6 @@ class _UserDashboardPageState extends State<UserDashboardPage> {
       'borrowedDate': '2025-10-01',
       'returnedDate': '2025-10-28',
       'status': 'returned',
-    },
-  ];
-
-  final List<Map<String, dynamic>> _likedBooks = [
-    {
-      'id': 1,
-      'title': 'Clean Code',
-      'author': 'Robert C. Martin',
-      'coverUrl': null,
-      'status': 'available',
-    },
-    {
-      'id': 2,
-      'title': 'Design Patterns',
-      'author': 'Gang of Four',
-      'coverUrl': null,
-      'status': 'borrowed',
-    },
-    {
-      'id': 3,
-      'title': 'The Pragmatic Programmer',
-      'author': 'Hunt & Thomas',
-      'coverUrl': null,
-      'status': 'available',
     },
   ];
 
@@ -118,11 +108,15 @@ class _UserDashboardPageState extends State<UserDashboardPage> {
                       ),
                       const SizedBox(width: 16),
                       Expanded(
-                        child: _buildStatCard(
-                          'Liked Books',
-                          '${_likedBooks.length}',
-                          Icons.favorite,
-                          Colors.red,
+                        child: Consumer<FavoriteProvider>(
+                          builder: (context, favoriteProvider, child) {
+                            return _buildStatCard(
+                              'Favorited Books',
+                              '${favoriteProvider.favoriteBooks.length}',
+                              Icons.favorite,
+                              Colors.red,
+                            );
+                          },
                         ),
                       ),
                     ],
@@ -133,8 +127,8 @@ class _UserDashboardPageState extends State<UserDashboardPage> {
                   _buildBorrowingHistorySection(),
                   const SizedBox(height: 30),
 
-                  // Liked Books Section
-                  _buildLikedBooksSection(),
+                  // Favorited Books Section
+                  _buildFavoritedBooksSection(),
                 ],
               ),
             ),
@@ -245,7 +239,12 @@ class _UserDashboardPageState extends State<UserDashboardPage> {
             ),
             TextButton.icon(
               onPressed: () {
-                // TODO: Navigate to full history
+                // TODO: Navigate to full borrowing history page when API endpoint is available
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Borrowing history view will be available once the backend API endpoint is implemented.'),
+                  ),
+                );
               },
               icon: const Icon(Icons.arrow_forward),
               label: const Text('View All'),
@@ -310,56 +309,96 @@ class _UserDashboardPageState extends State<UserDashboardPage> {
     );
   }
 
-  Widget _buildLikedBooksSection() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+  Widget _buildFavoritedBooksSection() {
+    return Consumer<FavoriteProvider>(
+      builder: (context, favoriteProvider, child) {
+        final favoritedBooks = favoriteProvider.favoriteBooks;
+        
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'Liked Books',
-              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text(
+                  'Favorited Books',
+                  style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                ),
+                TextButton.icon(
+                  onPressed: () {
+                    // Navigate to booklist page to view all books
+                    Navigator.pushNamed(context, '/booklist');
+                  },
+                  icon: const Icon(Icons.arrow_forward),
+                  label: const Text('View All'),
+                ),
+              ],
             ),
-            TextButton.icon(
-              onPressed: () {
-                // TODO: Navigate to full liked books
-              },
-              icon: const Icon(Icons.arrow_forward),
-              label: const Text('View All'),
-            ),
+            const SizedBox(height: 16),
+            if (favoriteProvider.isLoading)
+              const Center(
+                child: Padding(
+                  padding: EdgeInsets.all(40),
+                  child: CircularProgressIndicator(),
+                ),
+              )
+            else if (favoriteProvider.error != null)
+              Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(40),
+                  child: Center(
+                    child: Column(
+                      children: [
+                        Text('Error: ${favoriteProvider.error}'),
+                        const SizedBox(height: 16),
+                        ElevatedButton(
+                          onPressed: () {
+                            final authProvider = context.read<AuthProvider>();
+                            if (authProvider.currentUser != null) {
+                              final userId = authProvider.currentUser!['id'] as int;
+                              favoriteProvider.getUserFavorites(userId);
+                            }
+                          },
+                          child: const Text('Retry'),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              )
+            else if (favoritedBooks.isEmpty)
+              const Card(
+                child: Padding(
+                  padding: EdgeInsets.all(40),
+                  child: Center(child: Text('No favorited books yet')),
+                ),
+              )
+            else
+              GridView.builder(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 3,
+                  childAspectRatio: 0.7,
+                  crossAxisSpacing: 16,
+                  mainAxisSpacing: 16,
+                ),
+                itemCount: favoritedBooks.length > 6 ? 6 : favoritedBooks.length,
+                itemBuilder: (context, index) {
+                  return _buildBookCard(favoritedBooks[index]);
+                },
+              ),
           ],
-        ),
-        const SizedBox(height: 16),
-        if (_likedBooks.isEmpty)
-          const Card(
-            child: Padding(
-              padding: EdgeInsets.all(40),
-              child: Center(child: Text('No liked books yet')),
-            ),
-          )
-        else
-          GridView.builder(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 3,
-              childAspectRatio: 0.7,
-              crossAxisSpacing: 16,
-              mainAxisSpacing: 16,
-            ),
-            itemCount: _likedBooks.length,
-            itemBuilder: (context, index) {
-              return _buildBookCard(_likedBooks[index]);
-            },
-          ),
-      ],
+        );
+      },
     );
   }
 
   Widget _buildBookCard(Map<String, dynamic> book) {
-    final hasStatus = book['status'] == 'available';
-    final firstLetter = book['title'][0].toUpperCase();
+    // Get book status from API response (0 = available, not 0 = borrowed/reserved)
+    final status = book['status'] ?? 0;
+    final isAvailable = (status is int ? status : int.tryParse(status.toString())) == 0;
+    final firstLetter = (book['title'] ?? 'U')[0].toUpperCase();
 
     return Card(
       clipBehavior: Clip.antiAlias,
@@ -394,14 +433,14 @@ class _UserDashboardPageState extends State<UserDashboardPage> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  book['title'],
+                  book['title'] ?? 'Unknown',
                   style: const TextStyle(fontWeight: FontWeight.bold),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  book['author'],
+                  book['authors'] ?? 'Unknown',
                   style: TextStyle(fontSize: 12, color: Colors.grey[600]),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
@@ -414,17 +453,17 @@ class _UserDashboardPageState extends State<UserDashboardPage> {
                     vertical: 4,
                   ),
                   decoration: BoxDecoration(
-                    color: hasStatus
+                    color: isAvailable
                         ? Colors.green.shade100
                         : Colors.orange.shade100,
                     borderRadius: BorderRadius.circular(4),
                   ),
                   child: Text(
-                    book['status'],
+                    isAvailable ? 'Available' : 'Borrowed',
                     style: TextStyle(
                       fontSize: 10,
                       fontWeight: FontWeight.bold,
-                      color: hasStatus
+                      color: isAvailable
                           ? Colors.green.shade700
                           : Colors.orange.shade700,
                     ),
