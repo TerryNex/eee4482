@@ -26,9 +26,16 @@ import 'providers/book_provider.dart';
 import 'providers/favorite_provider.dart';
 import 'providers/borrowing_provider.dart';
 import 'providers/user_provider.dart';
+import 'config/api_config.dart';
 
 /// Application entry point
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  
+  // Load API configuration from server's config.json if available
+  // This allows changing API URL after deployment without rebuilding
+  await ApiConfig.loadConfigFromServer();
+  
   runApp(
     MultiProvider(
       providers: [
