@@ -178,7 +178,8 @@ class UserProvider extends ChangeNotifier {
       } else if (identifierType == 'username') {
         body['username'] = targetUserIdentifier;
       } else {
-        body['user_id_delete'] = int.tryParse(targetUserIdentifier) ?? 0;
+        body['user_id_delete'] =
+            (int.tryParse(targetUserIdentifier) ?? 0) as String;
       }
 
       final response = await http
