@@ -131,50 +131,114 @@ class _BooklistPageState extends State<BooklistPage> {
 
   void popupBorrowDialog(Map<String, dynamic> book) {
     final now = DateTime.now();
+    final authProvider = context.read<AuthProvider>();
+    final username = authProvider.currentUser?['username'] ?? 'Unknown User';
+    
+    // Default due date: 30 days from now
+    DateTime selectedDueDate = now.add(const Duration(days: 30));
+    
     showDialog<String>(
       context: context,
       builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text('Reserve Book'),
-          content: Container(
-            height: 150,
-            child: Column(
-              children: [
-                Text('Do you want to reserve the book with following details?'),
-                Container(height: 30),
-                Container(
-                  width: 300,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text("Date:" + now.toString()),
-                      Text("Title: " + book['title']),
-                      Text("Publishers: " + book['publishers']),
-                      Text("ISBN: " + book['isbn']),
-                      Text("Borrower: " + "HE HUALIANG (230263367)"),
-                    ],
-                  ),
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              title: Text('Borrow Book'),
+              content: Container(
+                width: 400,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Do you want to borrow this book?',
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(height: 20),
+                    Text("Title: ${book['title'] ?? 'Unknown'}"),
+                    Text("Authors: ${book['authors'] ?? 'Unknown'}"),
+                    Text("Publishers: ${book['publishers'] ?? 'Unknown'}"),
+                    Text("ISBN: ${book['isbn'] ?? 'Unknown'}"),
+                    const SizedBox(height: 20),
+                    Text("Borrower: $username"),
+                    Text("Borrowed Date: ${now.toString().split(' ')[0]}"),
+                    const SizedBox(height: 10),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text("Due Date: ${selectedDueDate.toString().split(' ')[0]}"),
+                        TextButton.icon(
+                          icon: Icon(Icons.calendar_today),
+                          label: Text('Change'),
+                          onPressed: () async {
+                            final picked = await showDatePicker(
+                              context: context,
+                              initialDate: selectedDueDate,
+                              firstDate: now,
+                              lastDate: now.add(const Duration(days: 365)),
+                            );
+                            if (picked != null) {
+                              setState(() {
+                                selectedDueDate = picked;
+                              });
+                            }
+                          },
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 20),
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.orange.shade100,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(Icons.info_outline, color: Colors.orange.shade700),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              'Note: This will be implemented once the backend API endpoint is ready.',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.orange.shade700,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              actions: <Widget>[
+                TextButton(
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                  child: Text('Cancel'),
+                ),
+                TextButton(
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                    // TODO: Implement actual API call when backend endpoint is ready
+                    // Expected endpoint: POST /books/borrow
+                    // Body: { book_id: book['book_id'], due_date: selectedDueDate }
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          'Borrow functionality will be available once the backend API endpoint is implemented. See BACKEND_CHANGE_REQUIREMENTS.md for details.',
+                        ),
+                        duration: const Duration(seconds: 5),
+                      ),
+                    );
+                  },
+                  child: Text('Borrow'),
                 ),
               ],
-            ),
-          ),
-          actions: <Widget>[
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-              child: Text('Cancel'),
-            ),
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('Borrowed "' + book['title'] + '".')),
-                );
-              },
-              child: Text('Yes'),
-            ),
-          ],
+            );
+          },
         );
       },
     );

@@ -239,12 +239,8 @@ class _UserDashboardPageState extends State<UserDashboardPage> {
             ),
             TextButton.icon(
               onPressed: () {
-                // TODO: Navigate to full borrowing history page when API endpoint is available
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Borrowing history view will be available once the backend API endpoint is implemented.'),
-                  ),
-                );
+                // Navigate to borrowing history page
+                Navigator.pushNamed(context, '/borrowing-history');
               },
               icon: const Icon(Icons.arrow_forward),
               label: const Text('View All'),
@@ -326,8 +322,8 @@ class _UserDashboardPageState extends State<UserDashboardPage> {
                 ),
                 TextButton.icon(
                   onPressed: () {
-                    // Navigate to booklist page to view all books
-                    Navigator.pushNamed(context, '/booklist');
+                    // Navigate to favorited books page
+                    Navigator.pushNamed(context, '/favorited-books');
                   },
                   icon: const Icon(Icons.arrow_forward),
                   label: const Text('View All'),

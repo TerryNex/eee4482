@@ -16,6 +16,8 @@ import 'pages/register_page.dart';
 import 'pages/change_password_page.dart';
 import 'pages/user_dashboard_page.dart';
 import 'pages/forgot_password_page.dart';
+import 'pages/borrowing_history_page.dart';
+import 'pages/favorited_books_page.dart';
 import 'themes/theme_provider.dart';
 import 'config/settings_provider.dart';
 import 'providers/auth_provider.dart';
@@ -65,6 +67,8 @@ class App extends StatelessWidget {
             '/booklist': (context) => BooklistPage(),
             '/settings': (context) => const SettingsPage(),
             '/change-password': (context) => const ChangePasswordPage(),
+            '/borrowing-history': (context) => const BorrowingHistoryPage(),
+            '/favorited-books': (context) => const FavoritedBooksPage(),
           },
           // Use theme from provider
           theme: themeProvider.themeData,
