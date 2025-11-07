@@ -64,6 +64,8 @@ class AuthProvider extends ChangeNotifier {
             'is_admin': parts[3] == 'admin',
             'displayName': parts.length > 4 ? parts[4] : parts[1],
           };
+          // Important: Set the token in ApiConfig so API calls work after page refresh
+          ApiConfig.setAuthToken(_authToken);
         }
       }
 
@@ -100,11 +102,15 @@ class AuthProvider extends ChangeNotifier {
         _authToken = token; // JWT token from backend
 
         _currentUser = {
-          'id': data['user_id'] ?? 1,
+          'id': int.tryParse(data['user_id']?.toString() ?? '1') ?? 1,
           'username': data['username'] ?? username,
           'email': data['email'] ?? '$username@placeholder.com',
-          'is_admin': data['is_admin'] == 1 || data['is_admin'] == true,
+          'is_admin': data['is_admin'] == 1 || 
+                      data['is_admin'] == '1' || 
+                      data['is_admin'] == true || 
+                      data['is_admin'] == 'true',
           'last_login': data['last_login'],
+          'displayName': data['username'] ?? username,
         };
 
         // Update API config with the token

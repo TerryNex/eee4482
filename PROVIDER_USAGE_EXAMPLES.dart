@@ -370,7 +370,7 @@ class _BookListWithFavoritesWidgetState
             itemCount: bookProvider.books.length,
             itemBuilder: (context, index) {
               final book = bookProvider.books[index];
-              final bookId = book['book_id'] as int;
+              final bookId = int.tryParse(book['book_id']) as int;
               final isLiked = favoriteProvider.isBookLiked(bookId);
               final isFavorited = favoriteProvider.isBookFavorited(bookId);
 

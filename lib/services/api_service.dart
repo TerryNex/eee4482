@@ -14,11 +14,7 @@ class ApiException implements Exception {
   final int? statusCode;
   final dynamic error;
 
-  ApiException({
-    required this.message,
-    this.statusCode,
-    this.error,
-  });
+  ApiException({required this.message, this.statusCode, this.error});
 
   @override
   String toString() {
@@ -45,7 +41,9 @@ class ApiService {
   }
 
   /// Get common headers including authentication
-  static Map<String, String> _getHeaders({Map<String, String>? additionalHeaders}) {
+  static Map<String, String> _getHeaders({
+    Map<String, String>? additionalHeaders,
+  }) {
     final headers = {
       'Content-Type': 'application/json',
       'Accept': 'application/json',
@@ -83,10 +81,11 @@ class ApiService {
       String errorMessage = 'Request failed';
       try {
         final errorBody = json.decode(response.body);
-        errorMessage = errorBody['message'] ?? errorMessage;
+        errorMessage =
+            errorBody['message'] ?? errorBody['error'] ?? errorMessage;
       } catch (e) {
-        errorMessage = response.body.isNotEmpty 
-            ? response.body 
+        errorMessage = response.body.isNotEmpty
+            ? response.body
             : 'Request failed with status ${response.statusCode}';
       }
 
@@ -103,12 +102,14 @@ class ApiService {
       return error;
     } else if (error is SocketException) {
       return ApiException(
-        message: 'Network error: Unable to connect to server. Please check your internet connection.',
+        message:
+            'Network error: Unable to connect to server. Please check your internet connection.',
         error: error,
       );
     } else if (error is TimeoutException) {
       return ApiException(
-        message: 'Request timeout: The server took too long to respond. Please try again.',
+        message:
+            'Request timeout: The server took too long to respond. Please try again.',
         error: error,
       );
     } else if (error is FormatException) {
@@ -135,9 +136,11 @@ class ApiService {
       var url = Uri.parse(ApiConfig.getFullUrl(endpoint));
 
       if (queryParameters != null && queryParameters.isNotEmpty) {
-        url = url.replace(queryParameters: queryParameters.map(
-          (key, value) => MapEntry(key, value.toString()),
-        ));
+        url = url.replace(
+          queryParameters: queryParameters.map(
+            (key, value) => MapEntry(key, value.toString()),
+          ),
+        );
       }
 
       final response = await client

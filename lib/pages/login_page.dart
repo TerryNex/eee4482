@@ -22,6 +22,29 @@ class _LoginPageState extends State<LoginPage> {
   bool _isLoading = false;
   bool _obscurePassword = true;
   bool _rememberMe = false;
+  Map<String, dynamic>? _savedUser;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkSavedSession();
+  }
+
+  /// Check if there's a saved session
+  Future<void> _checkSavedSession() async {
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    if (authProvider.isAuthenticated && authProvider.currentUser != null) {
+      setState(() {
+        _savedUser = authProvider.currentUser;
+      });
+    }
+  }
+
+  /// Continue with saved session
+  Future<void> _continueWithSavedSession() async {
+    // Navigate directly to home since user is already authenticated
+    Navigator.pushReplacementNamed(context, '/home');
+  }
 
   @override
   void dispose() {
@@ -145,6 +168,77 @@ class _LoginPageState extends State<LoginPage> {
                           textAlign: TextAlign.center,
                         ),
                         const SizedBox(height: 40),
+
+                        // Saved session card (if exists)
+                        if (_savedUser != null) ...[
+                          Card(
+                            color: Colors.blue.shade50,
+                            child: InkWell(
+                              onTap: _continueWithSavedSession,
+                              borderRadius: BorderRadius.circular(8),
+                              child: Padding(
+                                padding: const EdgeInsets.all(16),
+                                child: Row(
+                                  children: [
+                                    CircleAvatar(
+                                      backgroundColor: Colors.blue,
+                                      child: Text(
+                                        (_savedUser!['username'] ?? 'U')[0].toUpperCase(),
+                                        style: const TextStyle(
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 16),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            _savedUser!['username'] ?? 'User',
+                                            style: const TextStyle(
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 16,
+                                            ),
+                                          ),
+                                          const SizedBox(height: 4),
+                                          Text(
+                                            'Continue as ${_savedUser!['username']}',
+                                            style: TextStyle(
+                                              fontSize: 12,
+                                              color: Colors.grey[700],
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    const Icon(
+                                      Icons.arrow_forward_ios,
+                                      size: 20,
+                                      color: Colors.blue,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          const Row(
+                            children: [
+                              Expanded(child: Divider()),
+                              Padding(
+                                padding: EdgeInsets.symmetric(horizontal: 16),
+                                child: Text(
+                                  'Or login with different account',
+                                  style: TextStyle(fontSize: 12, color: Colors.grey),
+                                ),
+                              ),
+                              Expanded(child: Divider()),
+                            ],
+                          ),
+                          const SizedBox(height: 16),
+                        ],
 
                         // Username field
                         TextFormField(

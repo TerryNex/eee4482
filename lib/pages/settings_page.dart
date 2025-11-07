@@ -9,6 +9,7 @@ import '../themes/theme_provider.dart';
 import '../themes/app_themes.dart';
 import '../config/settings_provider.dart';
 import '../widgets/personal_info.dart';
+import '../providers/auth_provider.dart';
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
@@ -49,41 +50,62 @@ class _SettingsPageState extends State<SettingsPage> {
 
   @override
   Widget build(BuildContext context) {
-    return NavigationFrame(
-      selectedIndex: 3,
-      child: Column(
-        children: [
-          PersonalInfoWidget(),
-          Expanded(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(20),
-              child: Container(
-                constraints: const BoxConstraints(maxWidth: 800),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'Settings',
-                      style: TextStyle(
-                        fontSize: 32,
-                        fontWeight: FontWeight.bold,
-                      ),
+    return Consumer<AuthProvider>(
+      builder: (context, authProvider, child) {
+        // Check if user is admin
+        if (!authProvider.isAdmin) {
+          // Redirect non-admin users
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            Navigator.pushReplacementNamed(context, '/home');
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Settings page is only accessible to administrators'),
+                backgroundColor: Colors.red,
+              ),
+            );
+          });
+          return const Scaffold(
+            body: Center(child: CircularProgressIndicator()),
+          );
+        }
+
+        return NavigationFrame(
+          selectedIndex: 5,
+          child: Column(
+            children: [
+              PersonalInfoWidget(),
+              Expanded(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(20),
+                  child: Container(
+                    constraints: const BoxConstraints(maxWidth: 800),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Settings',
+                          style: TextStyle(
+                            fontSize: 32,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 30),
+                        _buildThemeSection(),
+                        const SizedBox(height: 30),
+                        _buildApiSection(),
+                        const SizedBox(height: 30),
+                        _buildProxySection(),
+                        const SizedBox(height: 30),
+                        _buildActionButtons(),
+                      ],
                     ),
-                    const SizedBox(height: 30),
-                    _buildThemeSection(),
-                    const SizedBox(height: 30),
-                    _buildApiSection(),
-                    const SizedBox(height: 30),
-                    _buildProxySection(),
-                    const SizedBox(height: 30),
-                    _buildActionButtons(),
-                  ],
+                  ),
                 ),
               ),
-            ),
+            ],
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 
@@ -143,17 +165,92 @@ class _SettingsPageState extends State<SettingsPage> {
             ),
             const SizedBox(height: 10),
             const Text(
-              'Configure the backend API endpoint',
+              'Configure the backend API endpoint. Settings are saved in browser localStorage.',
               style: TextStyle(fontSize: 14, color: Colors.grey),
             ),
+            const SizedBox(height: 15),
+            // Info box about config.json
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.blue.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.blue.withOpacity(0.3)),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.info_outline, color: Colors.blue[700], size: 20),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Server-side configuration available',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: Colors.blue[900],
+                            fontSize: 13,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          'You can also edit web/config.json on your server to change API URL without rebuilding. See API_CONFIGURATION_GUIDE.md for details.',
+                          style: TextStyle(
+                            color: Colors.blue[800],
+                            fontSize: 12,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
             const SizedBox(height: 20),
+            // Quick switch buttons
+            Row(
+              children: [
+                Expanded(
+                  child: ElevatedButton.icon(
+                    onPressed: () {
+                      setState(() {
+                        _apiUrlController.text = 'https://eee4482.chromahk.com/api';
+                      });
+                    },
+                    icon: const Icon(Icons.cloud_done, size: 18),
+                    label: const Text('Production API'),
+                    style: ElevatedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: () {
+                      setState(() {
+                        _apiUrlController.text = 'http://192.168.50.9/api';
+                      });
+                    },
+                    icon: const Icon(Icons.developer_mode, size: 18),
+                    label: const Text('Development API'),
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 15),
             TextField(
               controller: _apiUrlController,
               decoration: const InputDecoration(
                 labelText: 'API Base URL',
-                hintText: 'http://192.168.1.100/api/public',
+                hintText: 'https://eee4482.chromahk.com/api',
                 border: OutlineInputBorder(),
                 prefixIcon: Icon(Icons.cloud),
+                helperText: 'Example: https://yourdomain.com/api or http://192.168.1.100/api',
               ),
             ),
           ],

@@ -49,19 +49,39 @@ class _NavigationFrameState extends State<NavigationFrame> with RouteAware {
   }
 
   int _getIndexFromRoute(String routeName) {
-    switch (routeName) {
-      case '/home':
-        return 0;
-      case '/dashboard':
-        return 1;
-      case '/add':
-        return 2;
-      case '/booklist':
-        return 3;
-      case '/settings':
-        return 4;
-      default:
-        return 0;
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    final isAdmin = authProvider.isAdmin;
+    
+    if (!isAdmin) {
+      // For non-admin: Home(0), Dashboard(1), BookList(2)
+      switch (routeName) {
+        case '/home':
+          return 0;
+        case '/dashboard':
+          return 1;
+        case '/booklist':
+          return 2;
+        default:
+          return 0;
+      }
+    } else {
+      // For admin: Home(0), Dashboard(1), AddBook(2), BookList(3), Users(4), Settings(5)
+      switch (routeName) {
+        case '/home':
+          return 0;
+        case '/dashboard':
+          return 1;
+        case '/add':
+          return 2;
+        case '/booklist':
+          return 3;
+        case '/user-management':
+          return 4;
+        case '/settings':
+          return 5;
+        default:
+          return 0;
+      }
     }
   }
 
@@ -139,6 +159,63 @@ class _NavigationFrameState extends State<NavigationFrame> with RouteAware {
   Widget build(BuildContext context) {
     return Consumer<AuthProvider>(
       builder: (context, authProvider, child) {
+        final isAdmin = authProvider.isAdmin;
+        
+        // Build navigation destinations based on user role
+        List<NavigationRailDestination> destinations = [
+          const NavigationRailDestination(
+            icon: Icon(Icons.home_outlined),
+            label: Text('Home'),
+            selectedIcon: Icon(Icons.home),
+          ),
+          const NavigationRailDestination(
+            icon: Icon(Icons.dashboard_outlined),
+            label: Text('Dashboard'),
+            selectedIcon: Icon(Icons.dashboard),
+          ),
+        ];
+
+        // Add Book is admin-only
+        if (isAdmin) {
+          destinations.add(
+            const NavigationRailDestination(
+              icon: Icon(Icons.my_library_add_outlined),
+              label: Text('Add Book'),
+              selectedIcon: Icon(Icons.my_library_add),
+            ),
+          );
+        }
+
+        destinations.add(
+          const NavigationRailDestination(
+            icon: Icon(Icons.library_books_outlined),
+            label: Text('Book List'),
+            selectedIcon: Icon(Icons.library_books),
+          ),
+        );
+
+        // User Management is admin-only
+        if (isAdmin) {
+          destinations.add(
+            const NavigationRailDestination(
+              icon: Icon(Icons.people_outlined),
+              label: Text('Users'),
+              selectedIcon: Icon(Icons.people),
+            ),
+          );
+        }
+
+        // Settings is admin-only
+        if (isAdmin) {
+          destinations.add(
+            const NavigationRailDestination(
+              icon: Icon(Icons.settings_outlined),
+              label: Text('Settings'),
+              selectedIcon: Icon(Icons.settings),
+            ),
+          );
+        }
+
         return Scaffold(
           body: Row(
             children: [
@@ -168,54 +245,12 @@ class _NavigationFrameState extends State<NavigationFrame> with RouteAware {
                 onDestinationSelected: (int index) {
                   setState(() {
                     _currentIndex = index;
-                    switch (index) {
-                      case 0:
-                        Navigator.pushNamed(context, '/home');
-                        break;
-                      case 1:
-                        Navigator.pushNamed(context, '/dashboard');
-                        break;
-                      case 2:
-                        Navigator.pushNamed(context, '/add');
-                        break;
-                      case 3:
-                        Navigator.pushNamed(context, '/booklist');
-                        break;
-                      case 4:
-                        Navigator.pushNamed(context, '/settings');
-                        break;
-                      default:
-                        Navigator.pushNamed(context, '/');
-                    }
+                    // Map index to routes based on visible destinations
+                    String route = _getRouteForIndex(index, isAdmin);
+                    Navigator.pushNamed(context, route);
                   });
                 },
-                destinations: const <NavigationRailDestination>[
-                  NavigationRailDestination(
-                    icon: Icon(Icons.home_outlined),
-                    label: Text('Home'),
-                    selectedIcon: Icon(Icons.home),
-                  ),
-                  NavigationRailDestination(
-                    icon: Icon(Icons.dashboard_outlined),
-                    label: Text('Dashboard'),
-                    selectedIcon: Icon(Icons.dashboard),
-                  ),
-                  NavigationRailDestination(
-                    icon: Icon(Icons.my_library_add_outlined),
-                    label: Text('Add Book'),
-                    selectedIcon: Icon(Icons.my_library_add),
-                  ),
-                  NavigationRailDestination(
-                    icon: Icon(Icons.library_books_outlined),
-                    label: Text('Book List'),
-                    selectedIcon: Icon(Icons.library_books),
-                  ),
-                  NavigationRailDestination(
-                    icon: Icon(Icons.settings_outlined),
-                    label: Text('Settings'),
-                    selectedIcon: Icon(Icons.settings),
-                  ),
-                ],
+                destinations: destinations,
               ),
               Expanded(child: Center(child: widget.child)),
             ],
@@ -223,5 +258,39 @@ class _NavigationFrameState extends State<NavigationFrame> with RouteAware {
         );
       },
     );
+  }
+
+  String _getRouteForIndex(int index, bool isAdmin) {
+    if (!isAdmin) {
+      // For non-admin: Home(0), Dashboard(1), BookList(2)
+      switch (index) {
+        case 0:
+          return '/home';
+        case 1:
+          return '/dashboard';
+        case 2:
+          return '/booklist';
+        default:
+          return '/home';
+      }
+    } else {
+      // For admin: Home(0), Dashboard(1), AddBook(2), BookList(3), Users(4), Settings(5)
+      switch (index) {
+        case 0:
+          return '/home';
+        case 1:
+          return '/dashboard';
+        case 2:
+          return '/add';
+        case 3:
+          return '/booklist';
+        case 4:
+          return '/user-management';
+        case 5:
+          return '/settings';
+        default:
+          return '/home';
+      }
+    }
   }
 }

@@ -2,11 +2,16 @@
 /// Manages API endpoints, proxy settings, and authentication configuration
 /// Student: HE HUALIANG (230263367)
 
+import 'dart:convert';
+import 'package:http/http.dart' as http;
+
 class ApiConfig {
-  // Base API URL - This should be configured via Settings page or environment variables
-  // Default value is provided for initial setup only
-  // TODO: Replace with your actual server IP or use environment variables
-  static const String baseUrl = 'http://192.168.50.9/api';
+  // Base API URL - Mutable to allow runtime configuration
+  // Can be loaded from config.json or changed via Settings page
+  static String baseUrl = 'http://192.168.50.9/api';
+  
+  // Flag to track if config has been loaded from server
+  static bool _configLoaded = false;
 
   // Proxy settings - mutable for runtime configuration
   // These are managed by SettingsProvider for persistence
@@ -28,6 +33,50 @@ class ApiConfig {
   static const String updateBookEndpoint = '/books/update';
   static const String deleteBookEndpoint = '/books/delete';
 
+  /// Load configuration from server's config.json file
+  /// This allows changing API URL after deployment without rebuilding
+  static Future<void> loadConfigFromServer() async {
+    if (_configLoaded) return; // Only load once per session
+    
+    try {
+      final response = await http.get(
+        Uri.parse('/config.json'),
+        headers: {'Cache-Control': 'no-cache'},
+      ).timeout(const Duration(seconds: 5));
+      
+      if (response.statusCode == 200) {
+        final config = json.decode(response.body);
+        
+        if (config['apiBaseUrl'] != null && config['apiBaseUrl'].toString().isNotEmpty) {
+          baseUrl = config['apiBaseUrl'].toString();
+        }
+        
+        if (config['useProxy'] != null) {
+          useProxy = config['useProxy'] as bool? ?? false;
+        }
+        
+        if (config['proxyHost'] != null) {
+          proxyHost = config['proxyHost'].toString();
+        }
+        
+        if (config['proxyPort'] != null) {
+          proxyPort = config['proxyPort'] as int? ?? 8080;
+        }
+        
+        _configLoaded = true;
+        print('✓ API Config loaded from server: $baseUrl');
+      }
+    } catch (e) {
+      // If config.json doesn't exist or fails to load, use default values
+      print('ℹ Using default API config: $baseUrl');
+    }
+  }
+  
+  /// Set base URL (used by Settings page)
+  static void setBaseUrl(String url) {
+    baseUrl = url;
+  }
+  
   /// Get full URL for an endpoint
   static String getFullUrl(String endpoint) {
     return '$baseUrl$endpoint';

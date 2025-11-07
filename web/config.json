@@ -1,0 +1,7 @@
+{
+  "apiBaseUrl": "https://eee4482.chromahk.com/api",
+  "useProxy": false,
+  "proxyHost": "",
+  "proxyPort": 80,
+  "note": "Edit this file on the server to change API configuration without rebuilding the app"
+}

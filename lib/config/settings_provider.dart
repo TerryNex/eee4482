@@ -53,8 +53,7 @@ class SettingsProvider extends ChangeNotifier {
 
   /// Update ApiConfig with current settings
   void _updateApiConfig() {
-    // Note: Since ApiConfig uses static fields, we can't directly update baseUrl
-    // In a production app, you might want to refactor ApiConfig to be injectable
+    ApiConfig.setBaseUrl(_apiBaseUrl);
     ApiConfig.setProxy(enabled: _useProxy, host: _proxyHost, port: _proxyPort);
   }
 
