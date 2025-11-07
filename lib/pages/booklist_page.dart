@@ -87,107 +87,115 @@ class _BooklistPageState extends State<BooklistPage> {
         (status is int ? status : int.tryParse(status.toString())) == 0;
     final bookId = book['book_id'] as int?;
 
-    return Card(
-      child: ListTile(
-        enabled: isAvailable,
-        onTap: () {
-          if (isAvailable) {
-            popupBorrowDialog(book);
-          }
-        },
-        leading: Icon(Icons.book, size: 48),
-        title: Text(
-          book['title'] ?? 'Unknown',
-          style: TextStyle(fontWeight: FontWeight.bold),
-        ),
-        subtitle: Text(
-          'Author: ' +
-              (book['authors'] ?? 'Unknown') +
-              '\nPublishers: ' +
-              (book['publishers'] ?? 'Unknown') +
-              '\nDate: ' +
-              (book['date']?.toString() ?? 'Unknown') +
-              '\nISBN: ' +
-              (book['isbn'] ?? 'Unknown') +
-              '\nStatus: ' +
-              (isAvailable ? 'Available' : 'Borrowed'),
-        ),
-        trailing: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // Like button
-            if (bookId != null)
-              Consumer<FavoriteProvider>(
-                builder: (context, favoriteProvider, child) {
-                  final isLiked = favoriteProvider.isBookLiked(bookId);
-                  return IconButton(
-                    icon: Icon(
-                      isLiked ? Icons.thumb_up : Icons.thumb_up_outlined,
-                      color: isLiked ? Colors.blue : null,
-                    ),
-                    onPressed: () async {
-                      final success = await favoriteProvider.toggleLike(bookId);
-                      if (!success && context.mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text(
-                              favoriteProvider.error ?? 'Failed to update like',
-                            ),
-                            backgroundColor: Colors.red,
-                          ),
-                        );
+    return Consumer<AuthProvider>(
+      builder: (context, authProvider, child) {
+        final isAdmin = authProvider.isAdmin;
+        
+        return Card(
+          child: ListTile(
+            enabled: isAvailable,
+            onTap: () {
+              if (isAvailable) {
+                popupBorrowDialog(book);
+              }
+            },
+            leading: Icon(Icons.book, size: 48),
+            title: Text(
+              book['title'] ?? 'Unknown',
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
+            subtitle: Text(
+              'Author: ' +
+                  (book['authors'] ?? 'Unknown') +
+                  '\nPublishers: ' +
+                  (book['publishers'] ?? 'Unknown') +
+                  '\nDate: ' +
+                  (book['date']?.toString() ?? 'Unknown') +
+                  '\nISBN: ' +
+                  (book['isbn'] ?? 'Unknown') +
+                  '\nStatus: ' +
+                  (isAvailable ? 'Available' : 'Borrowed'),
+            ),
+            trailing: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Like button (available to all users)
+                if (bookId != null)
+                  Consumer<FavoriteProvider>(
+                    builder: (context, favoriteProvider, child) {
+                      final isLiked = favoriteProvider.isBookLiked(bookId);
+                      return IconButton(
+                        icon: Icon(
+                          isLiked ? Icons.thumb_up : Icons.thumb_up_outlined,
+                          color: isLiked ? Colors.blue : null,
+                        ),
+                        onPressed: () async {
+                          final success = await favoriteProvider.toggleLike(bookId);
+                          if (!success && context.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                  favoriteProvider.error ?? 'Failed to update like',
+                                ),
+                                backgroundColor: Colors.red,
+                              ),
+                            );
+                          }
+                        },
+                      );
+                    },
+                  ),
+                // Favorite button (available to all users)
+                if (bookId != null)
+                  Consumer<FavoriteProvider>(
+                    builder: (context, favoriteProvider, child) {
+                      final isFavorited = favoriteProvider.isBookFavorited(bookId);
+                      return IconButton(
+                        icon: Icon(
+                          isFavorited ? Icons.favorite : Icons.favorite_border,
+                          color: isFavorited ? Colors.red : null,
+                        ),
+                        onPressed: () async {
+                          final success = await favoriteProvider.toggleFavorite(bookId);
+                          if (!success && context.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                  favoriteProvider.error ?? 'Failed to update favorite',
+                                ),
+                                backgroundColor: Colors.red,
+                              ),
+                            );
+                          }
+                        },
+                      );
+                    },
+                  ),
+                // Edit button (admin only)
+                if (isAdmin)
+                  IconButton(
+                    onPressed: () {
+                      if (isAvailable && bookId != null) {
+                        popupUpdateDialog(book);
                       }
                     },
-                  );
-                },
-              ),
-            // Favorite button
-            if (bookId != null)
-              Consumer<FavoriteProvider>(
-                builder: (context, favoriteProvider, child) {
-                  final isFavorited = favoriteProvider.isBookFavorited(bookId);
-                  return IconButton(
-                    icon: Icon(
-                      isFavorited ? Icons.favorite : Icons.favorite_border,
-                      color: isFavorited ? Colors.red : null,
-                    ),
-                    onPressed: () async {
-                      final success = await favoriteProvider.toggleFavorite(bookId);
-                      if (!success && context.mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text(
-                              favoriteProvider.error ?? 'Failed to update favorite',
-                            ),
-                            backgroundColor: Colors.red,
-                          ),
-                        );
+                    icon: Icon(Icons.edit),
+                  ),
+                // Delete button (admin only)
+                if (isAdmin)
+                  IconButton(
+                    onPressed: () {
+                      if (isAvailable && bookId != null) {
+                        popupDeleteDialog(book);
                       }
                     },
-                  );
-                },
-              ),
-            // Edit button
-            IconButton(
-              onPressed: () {
-                if (isAvailable && bookId != null) {
-                  popupUpdateDialog(book);
-                }
-              },
-              icon: Icon(Icons.edit),
+                    icon: Icon(Icons.delete),
+                  ),
+              ],
             ),
-            // Delete button
-            IconButton(
-              onPressed: () {
-                if (isAvailable && bookId != null) {
-                  popupDeleteDialog(book);
-                }
-              },
-              icon: Icon(Icons.delete),
-            ),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 

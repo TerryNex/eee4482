@@ -9,6 +9,7 @@ import '../themes/theme_provider.dart';
 import '../themes/app_themes.dart';
 import '../config/settings_provider.dart';
 import '../widgets/personal_info.dart';
+import '../providers/auth_provider.dart';
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
@@ -49,41 +50,62 @@ class _SettingsPageState extends State<SettingsPage> {
 
   @override
   Widget build(BuildContext context) {
-    return NavigationFrame(
-      selectedIndex: 3,
-      child: Column(
-        children: [
-          PersonalInfoWidget(),
-          Expanded(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(20),
-              child: Container(
-                constraints: const BoxConstraints(maxWidth: 800),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'Settings',
-                      style: TextStyle(
-                        fontSize: 32,
-                        fontWeight: FontWeight.bold,
-                      ),
+    return Consumer<AuthProvider>(
+      builder: (context, authProvider, child) {
+        // Check if user is admin
+        if (!authProvider.isAdmin) {
+          // Redirect non-admin users
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            Navigator.pushReplacementNamed(context, '/home');
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Settings page is only accessible to administrators'),
+                backgroundColor: Colors.red,
+              ),
+            );
+          });
+          return const Scaffold(
+            body: Center(child: CircularProgressIndicator()),
+          );
+        }
+
+        return NavigationFrame(
+          selectedIndex: 5,
+          child: Column(
+            children: [
+              PersonalInfoWidget(),
+              Expanded(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(20),
+                  child: Container(
+                    constraints: const BoxConstraints(maxWidth: 800),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Settings',
+                          style: TextStyle(
+                            fontSize: 32,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 30),
+                        _buildThemeSection(),
+                        const SizedBox(height: 30),
+                        _buildApiSection(),
+                        const SizedBox(height: 30),
+                        _buildProxySection(),
+                        const SizedBox(height: 30),
+                        _buildActionButtons(),
+                      ],
                     ),
-                    const SizedBox(height: 30),
-                    _buildThemeSection(),
-                    const SizedBox(height: 30),
-                    _buildApiSection(),
-                    const SizedBox(height: 30),
-                    _buildProxySection(),
-                    const SizedBox(height: 30),
-                    _buildActionButtons(),
-                  ],
+                  ),
                 ),
               ),
-            ),
+            ],
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 
