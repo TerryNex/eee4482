@@ -156,31 +156,36 @@ class _BorrowingHistoryPageState extends State<BorrowingHistoryPage> {
 
   Widget _buildBorrowingCard(Map<String, dynamic> record) {
     final isBorrowed = record['status'] == 'borrowed';
+    final bookId = record['book_id'];
 
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
       child: ListTile(
+        onTap: () {
+          // Navigate to book list or show book details
+          Navigator.pushNamed(context, '/booklist');
+        },
         leading: Icon(
           isBorrowed ? Icons.book : Icons.check_circle,
           color: isBorrowed ? Colors.blue : Colors.green,
           size: 40,
         ),
         title: Text(
-          record['book_title'] ?? record['bookTitle'] ?? 'Unknown Book',
+          record['book_title'] ?? 'Unknown Book',
           style: const TextStyle(fontWeight: FontWeight.bold),
         ),
         subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('by ${record['authors'] ?? record['author'] ?? 'Unknown'}'),
+            Text('by ${record['authors'] ?? 'Unknown'}'),
             const SizedBox(height: 4),
             Text(
-              'Borrowed: ${record['borrowed_date'] ?? record['borrowedDate'] ?? 'N/A'}',
+              'Borrowed: ${record['borrowed_date'] ?? 'N/A'}',
               style: const TextStyle(fontSize: 12),
             ),
             if (isBorrowed)
               Text(
-                'Due: ${record['due_date'] ?? record['dueDate'] ?? 'N/A'}',
+                'Due: ${record['due_date'] ?? 'N/A'}',
                 style: const TextStyle(
                   fontSize: 12,
                   color: Colors.orange,
@@ -189,7 +194,7 @@ class _BorrowingHistoryPageState extends State<BorrowingHistoryPage> {
               )
             else
               Text(
-                'Returned: ${record['returned_date'] ?? record['returnedDate'] ?? 'N/A'}',
+                'Returned: ${record['returned_date'] ?? 'N/A'}',
                 style: TextStyle(
                   fontSize: 12,
                   color: Colors.green.shade700,
@@ -197,14 +202,86 @@ class _BorrowingHistoryPageState extends State<BorrowingHistoryPage> {
               ),
           ],
         ),
-        trailing: Chip(
-          label: Text(
-            isBorrowed ? 'Currently Borrowed' : 'Returned',
-            style: const TextStyle(fontSize: 12),
-          ),
-          backgroundColor:
-              isBorrowed ? Colors.orange.shade100 : Colors.green.shade100,
-        ),
+        trailing: isBorrowed && bookId != null
+            ? ElevatedButton.icon(
+                onPressed: () async {
+                  // Show confirmation dialog
+                  final confirm = await showDialog<bool>(
+                    context: context,
+                    builder: (context) => AlertDialog(
+                      title: const Text('Return Book'),
+                      content: Text(
+                        'Do you want to return "${record['book_title'] ?? 'this book'}"?',
+                      ),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.pop(context, false),
+                          child: const Text('Cancel'),
+                        ),
+                        ElevatedButton(
+                          onPressed: () => Navigator.pop(context, true),
+                          child: const Text('Return'),
+                        ),
+                      ],
+                    ),
+                  );
+
+                  if (confirm == true && context.mounted) {
+                    // Show loading
+                    showDialog(
+                      context: context,
+                      barrierDismissible: false,
+                      builder: (context) => const Center(
+                        child: CircularProgressIndicator(),
+                      ),
+                    );
+
+                    // Call return API
+                    final borrowingProvider = context.read<BorrowingProvider>();
+                    final success = await borrowingProvider.returnBook(
+                      int.parse(bookId.toString()),
+                    );
+
+                    // Close loading
+                    if (context.mounted) {
+                      Navigator.pop(context);
+                    }
+
+                    // Show result
+                    if (context.mounted) {
+                      if (success) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Book returned successfully'),
+                            backgroundColor: Colors.green,
+                          ),
+                        );
+                      } else {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(
+                              borrowingProvider.error ?? 'Failed to return book',
+                            ),
+                            backgroundColor: Colors.red,
+                          ),
+                        );
+                      }
+                    }
+                  }
+                },
+                icon: const Icon(Icons.keyboard_return, size: 16),
+                label: const Text('Return', style: TextStyle(fontSize: 12)),
+                style: ElevatedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                ),
+              )
+            : Chip(
+                label: Text(
+                  'Returned',
+                  style: const TextStyle(fontSize: 12),
+                ),
+                backgroundColor: Colors.green.shade100,
+              ),
       ),
     );
   }

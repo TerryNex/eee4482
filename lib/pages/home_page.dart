@@ -9,6 +9,7 @@ import '../widgets/navigation_frame.dart';
 import '../widgets/personal_info.dart';
 import '../widgets/book_carousel.dart';
 import '../providers/book_provider.dart';
+import '../providers/auth_provider.dart';
 
 /// HomePage widget displays the landing page of the e-Library application
 /// Shows the application title, student information, and a carousel of books
@@ -22,9 +23,6 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  // Student information - Update this with your details
-  var username = "HE HUALIANG (230263367)";
-
   @override
   void initState() {
     super.initState();
@@ -45,6 +43,9 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
+    final authProvider = Provider.of<AuthProvider>(context);
+    final username = authProvider.currentUser?['username'] ?? 'Guest';
+
     return Scaffold(
       body: NavigationFrame(
         selectedIndex: 0,

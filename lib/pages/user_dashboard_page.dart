@@ -166,11 +166,11 @@ class _UserDashboardPageState extends State<UserDashboardPage> {
                   const SizedBox(height: 8),
                   Chip(
                     label: Text(
-                      user?['role'] == 'admin' ? 'Administrator' : 'Member',
+                      user?['is_admin'] == true ? 'Administrator' : 'Member',
                       style: const TextStyle(fontSize: 12),
                     ),
                     avatar: Icon(
-                      user?['role'] == 'admin'
+                      user?['is_admin'] == true
                           ? Icons.admin_panel_settings
                           : Icons.person,
                       size: 18,
@@ -276,24 +276,28 @@ class _UserDashboardPageState extends State<UserDashboardPage> {
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
       child: ListTile(
+        onTap: () {
+          // Navigate to borrowing history
+          Navigator.pushNamed(context, '/borrowing-history');
+        },
         leading: Icon(
           isBorrowed ? Icons.book : Icons.check_circle,
           color: isBorrowed ? Colors.blue : Colors.green,
           size: 40,
         ),
         title: Text(
-          record['book_title'] ?? record['bookTitle'] ?? 'Unknown Book',
+          record['book_title'] ?? 'Unknown Book',
           style: const TextStyle(fontWeight: FontWeight.bold),
         ),
         subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('by ${record['authors'] ?? record['author'] ?? 'Unknown'}'),
+            Text('by ${record['authors'] ?? 'Unknown'}'),
             const SizedBox(height: 4),
             Text(
               isBorrowed
-                  ? 'Due: ${record['due_date'] ?? record['dueDate'] ?? 'N/A'}'
-                  : 'Returned: ${record['returned_date'] ?? record['returnedDate'] ?? 'N/A'}',
+                  ? 'Due: ${record['due_date'] ?? 'N/A'}'
+                  : 'Returned: ${record['returned_date'] ?? 'N/A'}',
               style: TextStyle(
                 fontSize: 12,
                 color: isBorrowed ? Colors.orange : Colors.green,

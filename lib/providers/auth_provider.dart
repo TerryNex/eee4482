@@ -107,6 +107,7 @@ class AuthProvider extends ChangeNotifier {
           'email': data['email'] ?? '$username@placeholder.com',
           'is_admin': data['is_admin'] == 1 || data['is_admin'] == true,
           'last_login': data['last_login'],
+          'displayName': data['username'] ?? username,
         };
 
         // Update API config with the token

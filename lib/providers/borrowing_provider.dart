@@ -114,13 +114,50 @@ class BorrowingProvider extends ChangeNotifier {
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
+        List<Map<String, dynamic>> rawHistory = [];
+        
         if (data is List) {
-          _borrowingHistory = List<Map<String, dynamic>>.from(data);
+          rawHistory = List<Map<String, dynamic>>.from(data);
         } else if (data is Map && data.containsKey('data')) {
-          _borrowingHistory = List<Map<String, dynamic>>.from(data['data']);
-        } else {
-          _borrowingHistory = [];
+          rawHistory = List<Map<String, dynamic>>.from(data['data']);
         }
+
+        // Fetch book details for each record
+        _borrowingHistory = [];
+        for (var record in rawHistory) {
+          final bookId = record['book_id'];
+          if (bookId != null) {
+            try {
+              // Fetch book details
+              final bookPath = '/books/all';
+              final bookUri = _buildUri(bookPath);
+              final bookResponse = await http
+                  .get(bookUri, headers: ApiConfig.getAuthorizationHeaders())
+                  .timeout(const Duration(seconds: 10));
+              
+              if (bookResponse.statusCode == 200) {
+                final books = json.decode(bookResponse.body);
+                if (books is List) {
+                  final book = books.firstWhere(
+                    (b) => b['book_id'].toString() == bookId.toString(),
+                    orElse: () => null,
+                  );
+                  
+                  if (book != null) {
+                    // Merge book details with borrowing record
+                    record['book_title'] = book['title'];
+                    record['authors'] = book['authors'];
+                    record['isbn'] = book['isbn'];
+                  }
+                }
+              }
+            } catch (e) {
+              debugPrint('Error fetching book details for book_id $bookId: $e');
+            }
+          }
+          _borrowingHistory.add(record);
+        }
+
         _isLoading = false;
         notifyListeners();
         return true;

@@ -6,6 +6,7 @@ import '../widgets/personal_info.dart';
 import '../providers/book_provider.dart';
 import '../providers/auth_provider.dart';
 import '../providers/borrowing_provider.dart';
+import '../providers/favorite_provider.dart';
 
 class BooklistPage extends StatefulWidget {
   BooklistPage({super.key});
@@ -18,9 +19,14 @@ class _BooklistPageState extends State<BooklistPage> {
   @override
   void initState() {
     super.initState();
-    // Fetch books when page loads
+    // Fetch books and user favorites when page loads
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<BookProvider>().getAllBooks();
+      final authProvider = context.read<AuthProvider>();
+      if (authProvider.isAuthenticated && authProvider.currentUser != null) {
+        final userId = authProvider.currentUser!['id'] as int;
+        context.read<FavoriteProvider>().getUserFavorites(userId);
+      }
     });
   }
 
@@ -109,6 +115,59 @@ class _BooklistPageState extends State<BooklistPage> {
         trailing: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
+            // Like button
+            if (bookId != null)
+              Consumer<FavoriteProvider>(
+                builder: (context, favoriteProvider, child) {
+                  final isLiked = favoriteProvider.isBookLiked(bookId);
+                  return IconButton(
+                    icon: Icon(
+                      isLiked ? Icons.thumb_up : Icons.thumb_up_outlined,
+                      color: isLiked ? Colors.blue : null,
+                    ),
+                    onPressed: () async {
+                      final success = await favoriteProvider.toggleLike(bookId);
+                      if (!success && context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(
+                              favoriteProvider.error ?? 'Failed to update like',
+                            ),
+                            backgroundColor: Colors.red,
+                          ),
+                        );
+                      }
+                    },
+                  );
+                },
+              ),
+            // Favorite button
+            if (bookId != null)
+              Consumer<FavoriteProvider>(
+                builder: (context, favoriteProvider, child) {
+                  final isFavorited = favoriteProvider.isBookFavorited(bookId);
+                  return IconButton(
+                    icon: Icon(
+                      isFavorited ? Icons.favorite : Icons.favorite_border,
+                      color: isFavorited ? Colors.red : null,
+                    ),
+                    onPressed: () async {
+                      final success = await favoriteProvider.toggleFavorite(bookId);
+                      if (!success && context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(
+                              favoriteProvider.error ?? 'Failed to update favorite',
+                            ),
+                            backgroundColor: Colors.red,
+                          ),
+                        );
+                      }
+                    },
+                  );
+                },
+              ),
+            // Edit button
             IconButton(
               onPressed: () {
                 if (isAvailable && bookId != null) {
@@ -117,6 +176,7 @@ class _BooklistPageState extends State<BooklistPage> {
               },
               icon: Icon(Icons.edit),
             ),
+            // Delete button
             IconButton(
               onPressed: () {
                 if (isAvailable && bookId != null) {
