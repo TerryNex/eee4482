@@ -450,12 +450,30 @@ class _UserManagementPageState extends State<UserManagementPage> {
   }
 
   void _showDeleteUserDialog(Map<String, dynamic> user) {
+    final passwordController = TextEditingController();
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Delete User'),
-        content: Text(
-          'Are you sure you want to delete user "${user['username']}"? This action cannot be undone.',
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Are you sure you want to delete user "${user['username']}"? This action cannot be undone.',
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: passwordController,
+              obscureText: true,
+              decoration: const InputDecoration(
+                labelText: 'Your Password (Admin)',
+                border: OutlineInputBorder(),
+                hintText: 'Enter your password to confirm',
+              ),
+            ),
+          ],
         ),
         actions: [
           TextButton(
@@ -467,6 +485,16 @@ class _UserManagementPageState extends State<UserManagementPage> {
               backgroundColor: Colors.red,
             ),
             onPressed: () async {
+              if (passwordController.text.isEmpty) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Please enter your password'),
+                    backgroundColor: Colors.red,
+                  ),
+                );
+                return;
+              }
+
               Navigator.pop(context);
 
               // Show loading
@@ -479,8 +507,17 @@ class _UserManagementPageState extends State<UserManagementPage> {
               );
 
               // Delete user
+              final authProvider = context.read<AuthProvider>();
               final userProvider = context.read<UserProvider>();
-              final success = await userProvider.deleteUser(user['user_id']);
+              final currentUserId = authProvider.currentUser?['id'] as int;
+              final targetUserId = user['user_id'].toString();
+              
+              final success = await userProvider.deleteUser(
+                currentUserId,
+                passwordController.text,
+                targetUserId,
+                identifierType: 'user_id',
+              );
 
               // Close loading
               if (mounted) Navigator.pop(context);
