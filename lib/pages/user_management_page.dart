@@ -416,9 +416,31 @@ class _UserManagementPageState extends State<UserManagementPage> {
 
                 // Update user
                 final userProvider = context.read<UserProvider>();
-                final userId = user['user_id'] is int 
-                    ? user['user_id'] as int
-                    : int.tryParse(user['user_id'].toString()) ?? 0;
+                
+                // Get user ID with better error handling
+                int? userId;
+                if (user['user_id'] is int) {
+                  userId = user['user_id'] as int;
+                } else {
+                  userId = int.tryParse(user['user_id']?.toString() ?? '');
+                }
+                
+                if (userId == null) {
+                  // Close loading
+                  if (mounted) Navigator.pop(context);
+                  
+                  // Show error
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Invalid user ID'),
+                        backgroundColor: Colors.red,
+                      ),
+                    );
+                  }
+                  return;
+                }
+                
                 final success = await userProvider.updateUser(
                   userId,
                   {
@@ -512,9 +534,31 @@ class _UserManagementPageState extends State<UserManagementPage> {
               // Delete user
               final authProvider = context.read<AuthProvider>();
               final userProvider = context.read<UserProvider>();
-              final currentUserId = authProvider.currentUser?['id'] is int
-                  ? authProvider.currentUser?['id'] as int
-                  : int.tryParse(authProvider.currentUser?['id'].toString() ?? '0') ?? 0;
+              
+              // Get current user ID with better error handling
+              int? currentUserId;
+              if (authProvider.currentUser?['id'] is int) {
+                currentUserId = authProvider.currentUser?['id'] as int;
+              } else {
+                currentUserId = int.tryParse(authProvider.currentUser?['id']?.toString() ?? '');
+              }
+              
+              if (currentUserId == null) {
+                // Close loading
+                if (mounted) Navigator.pop(context);
+                
+                // Show error
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Unable to determine current user ID'),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                }
+                return;
+              }
+              
               final targetUserId = user['user_id'].toString();
               
               final success = await userProvider.deleteUser(
