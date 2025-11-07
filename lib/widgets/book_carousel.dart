@@ -74,19 +74,19 @@ class _BookCarouselState extends State<BookCarousel> {
       onExit: (_) => _onHover(false),
       child: Container(
         height: 320,
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.centerLeft,
-            end: Alignment.centerRight,
-            colors: [
-              Theme.of(context).scaffoldBackgroundColor,
-              Colors.transparent,
-              Colors.transparent,
-              Theme.of(context).scaffoldBackgroundColor,
-            ],
-            stops: const [0.0, 0.1, 0.9, 1.0],
-          ),
-        ),
+        // decoration: BoxDecoration(
+        //   gradient: LinearGradient(
+        //     begin: Alignment.centerLeft,
+        //     end: Alignment.centerRight,
+        //     colors: [
+        //       Theme.of(context).scaffoldBackgroundColor,
+        //       Colors.transparent,
+        //       Colors.transparent,
+        //       Theme.of(context).scaffoldBackgroundColor,
+        //     ],
+        //     stops: const [0.0, 0.1, 0.9, 1.0],
+        //   ),
+        // ),
         child: PageView.builder(
           controller: _pageController,
           onPageChanged: (index) {
@@ -123,7 +123,8 @@ class _BookCarouselState extends State<BookCarousel> {
   Widget _buildBookCard(Map<String, dynamic> book) {
     // Get book status from API response (0 = available, not 0 = borrowed/reserved)
     final status = book['status'] ?? 0;
-    final isAvailable = (status is int ? status : int.tryParse(status.toString())) == 0;
+    final isAvailable =
+        (status is int ? status : int.tryParse(status.toString())) == 0;
     final firstLetter = (book['title'] ?? 'U')[0].toUpperCase();
 
     return Card(
@@ -136,8 +137,9 @@ class _BookCarouselState extends State<BookCarousel> {
           // Book cover or first letter
           Expanded(
             child: Container(
-              color: Colors.primaries[
-                  firstLetter.codeUnitAt(0) % Colors.primaries.length],
+              color:
+                  Colors.primaries[firstLetter.codeUnitAt(0) %
+                      Colors.primaries.length],
               child: book['coverUrl'] != null
                   ? Image.network(book['coverUrl'], fit: BoxFit.cover)
                   : Center(
