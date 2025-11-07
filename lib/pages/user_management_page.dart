@@ -416,8 +416,11 @@ class _UserManagementPageState extends State<UserManagementPage> {
 
                 // Update user
                 final userProvider = context.read<UserProvider>();
+                final userId = user['user_id'] is int 
+                    ? user['user_id'] as int
+                    : int.tryParse(user['user_id'].toString()) ?? 0;
                 final success = await userProvider.updateUser(
-                  user['user_id'],
+                  userId,
                   {
                     'email': emailController.text,
                     'is_admin': isAdmin ? 1 : 0,
@@ -509,7 +512,9 @@ class _UserManagementPageState extends State<UserManagementPage> {
               // Delete user
               final authProvider = context.read<AuthProvider>();
               final userProvider = context.read<UserProvider>();
-              final currentUserId = authProvider.currentUser?['id'] as int;
+              final currentUserId = authProvider.currentUser?['id'] is int
+                  ? authProvider.currentUser?['id'] as int
+                  : int.tryParse(authProvider.currentUser?['id'].toString() ?? '0') ?? 0;
               final targetUserId = user['user_id'].toString();
               
               final success = await userProvider.deleteUser(

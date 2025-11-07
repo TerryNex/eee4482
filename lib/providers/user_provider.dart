@@ -171,15 +171,14 @@ class UserProvider extends ChangeNotifier {
       final path = '/user/delete/$userId';
       final uri = _buildUri(path);
 
-      final body = {'password': currentPassword};
+      final body = <String, dynamic>{'password': currentPassword};
 
       if (identifierType == 'email') {
         body['email'] = targetUserIdentifier;
       } else if (identifierType == 'username') {
         body['username'] = targetUserIdentifier;
       } else {
-        body['user_id_delete'] =
-            (int.tryParse(targetUserIdentifier) ?? 0) as String;
+        body['user_id_delete'] = int.tryParse(targetUserIdentifier) ?? 0;
       }
 
       final response = await http
