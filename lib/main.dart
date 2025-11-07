@@ -23,6 +23,7 @@ import 'config/settings_provider.dart';
 import 'providers/auth_provider.dart';
 import 'providers/book_provider.dart';
 import 'providers/favorite_provider.dart';
+import 'providers/borrowing_provider.dart';
 
 /// Application entry point
 void main() {
@@ -34,6 +35,7 @@ void main() {
         ChangeNotifierProvider(create: (_) => AuthProvider()),
         ChangeNotifierProvider(create: (_) => BookProvider()),
         ChangeNotifierProvider(create: (_) => FavoriteProvider()),
+        ChangeNotifierProvider(create: (_) => BorrowingProvider()),
       ],
       child: const App(),
     ),

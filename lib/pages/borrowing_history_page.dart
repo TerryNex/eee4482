@@ -5,6 +5,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
+import '../providers/borrowing_provider.dart';
 import '../widgets/navigation_frame.dart';
 import '../widgets/personal_info.dart';
 
@@ -16,39 +17,13 @@ class BorrowingHistoryPage extends StatefulWidget {
 }
 
 class _BorrowingHistoryPageState extends State<BorrowingHistoryPage> {
-  // Sample data - will be replaced with actual API call
-  final List<Map<String, dynamic>> _borrowingHistory = [
-    {
-      'id': 1,
-      'bookTitle': 'Introduction to Flutter',
-      'author': 'John Doe',
-      'borrowedDate': '2025-10-15',
-      'dueDate': '2025-11-15',
-      'status': 'borrowed',
-    },
-    {
-      'id': 2,
-      'bookTitle': 'Advanced Dart Programming',
-      'author': 'Jane Smith',
-      'borrowedDate': '2025-10-01',
-      'returnedDate': '2025-10-28',
-      'status': 'returned',
-    },
-    {
-      'id': 3,
-      'bookTitle': 'Flutter in Action',
-      'author': 'Bob Johnson',
-      'borrowedDate': '2025-09-15',
-      'returnedDate': '2025-10-10',
-      'status': 'returned',
-    },
-  ];
-
   @override
   void initState() {
     super.initState();
-    // TODO: Fetch borrowing history from API when endpoint is available
-    // Expected endpoint: GET /user/{user_id}/borrowing_history or /borrowing_history
+    // Fetch borrowing history from API when page loads
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<BorrowingProvider>().getBorrowingHistory();
+    });
   }
 
   @override
@@ -72,50 +47,104 @@ class _BorrowingHistoryPageState extends State<BorrowingHistoryPage> {
             Expanded(
               child: SingleChildScrollView(
                 padding: const EdgeInsets.all(20),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Header
-                    Row(
+                child: Consumer<BorrowingProvider>(
+                  builder: (context, borrowingProvider, child) {
+                    final borrowingHistory = borrowingProvider.borrowingHistory;
+
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        IconButton(
-                          icon: const Icon(Icons.arrow_back),
-                          onPressed: () => Navigator.pop(context),
-                        ),
-                        const Text(
-                          'Borrowing History',
-                          style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 20),
-
-                    // Info message
-                    Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: Colors.blue.shade50,
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: Colors.blue.shade200),
-                      ),
-                      child: Row(
-                        children: [
-                          Icon(Icons.info_outline, color: Colors.blue.shade700),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Text(
-                              'This page will display your complete borrowing history once the backend API endpoint is implemented. See BACKEND_CHANGE_REQUIREMENTS.md for details.',
-                              style: TextStyle(color: Colors.blue.shade700),
+                        // Header
+                        Row(
+                          children: [
+                            IconButton(
+                              icon: const Icon(Icons.arrow_back),
+                              onPressed: () => Navigator.pop(context),
                             ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 20),
+                            const Text(
+                              'Borrowing History',
+                              style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 20),
 
-                    // Sample borrowing history
-                    ..._borrowingHistory.map((record) => _buildBorrowingCard(record)),
-                  ],
+                        // Loading state
+                        if (borrowingProvider.isLoading)
+                          const Center(
+                            child: Padding(
+                              padding: EdgeInsets.all(40),
+                              child: CircularProgressIndicator(),
+                            ),
+                          )
+
+                        // Error state
+                        else if (borrowingProvider.error != null)
+                          Center(
+                            child: Card(
+                              child: Padding(
+                                padding: const EdgeInsets.all(40),
+                                child: Column(
+                                  children: [
+                                    const Icon(Icons.error, size: 64, color: Colors.red),
+                                    const SizedBox(height: 16),
+                                    Text('Error: ${borrowingProvider.error}'),
+                                    const SizedBox(height: 16),
+                                    ElevatedButton(
+                                      onPressed: () {
+                                        borrowingProvider.getBorrowingHistory();
+                                      },
+                                      child: const Text('Retry'),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          )
+
+                        // Empty state
+                        else if (borrowingHistory.isEmpty)
+                          Center(
+                            child: Card(
+                              child: Padding(
+                                padding: const EdgeInsets.all(40),
+                                child: Column(
+                                  children: [
+                                    const Icon(
+                                      Icons.history,
+                                      size: 64,
+                                      color: Colors.grey,
+                                    ),
+                                    const SizedBox(height: 16),
+                                    const Text(
+                                      'No borrowing history yet',
+                                      style: TextStyle(fontSize: 18),
+                                    ),
+                                    const SizedBox(height: 8),
+                                    Text(
+                                      'Browse books and borrow some!',
+                                      style: TextStyle(color: Colors.grey[600]),
+                                    ),
+                                    const SizedBox(height: 16),
+                                    ElevatedButton.icon(
+                                      onPressed: () {
+                                        Navigator.pushNamed(context, '/booklist');
+                                      },
+                                      icon: const Icon(Icons.book),
+                                      label: const Text('Browse Books'),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          )
+
+                        // Borrowing history list
+                        else
+                          ...borrowingHistory.map((record) => _buildBorrowingCard(record)),
+                      ],
+                    );
+                  },
                 ),
               ),
             ),
@@ -137,21 +166,21 @@ class _BorrowingHistoryPageState extends State<BorrowingHistoryPage> {
           size: 40,
         ),
         title: Text(
-          record['bookTitle'],
+          record['book_title'] ?? record['bookTitle'] ?? 'Unknown Book',
           style: const TextStyle(fontWeight: FontWeight.bold),
         ),
         subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('by ${record['author']}'),
+            Text('by ${record['authors'] ?? record['author'] ?? 'Unknown'}'),
             const SizedBox(height: 4),
             Text(
-              'Borrowed: ${record['borrowedDate']}',
+              'Borrowed: ${record['borrowed_date'] ?? record['borrowedDate'] ?? 'N/A'}',
               style: const TextStyle(fontSize: 12),
             ),
             if (isBorrowed)
               Text(
-                'Due: ${record['dueDate']}',
+                'Due: ${record['due_date'] ?? record['dueDate'] ?? 'N/A'}',
                 style: const TextStyle(
                   fontSize: 12,
                   color: Colors.orange,
@@ -160,7 +189,7 @@ class _BorrowingHistoryPageState extends State<BorrowingHistoryPage> {
               )
             else
               Text(
-                'Returned: ${record['returnedDate']}',
+                'Returned: ${record['returned_date'] ?? record['returnedDate'] ?? 'N/A'}',
                 style: TextStyle(
                   fontSize: 12,
                   color: Colors.green.shade700,

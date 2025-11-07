@@ -64,6 +64,8 @@ class AuthProvider extends ChangeNotifier {
             'is_admin': parts[3] == 'admin',
             'displayName': parts.length > 4 ? parts[4] : parts[1],
           };
+          // Important: Set the token in ApiConfig so API calls work after page refresh
+          ApiConfig.setAuthToken(_authToken);
         }
       }
 

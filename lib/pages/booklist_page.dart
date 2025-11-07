@@ -5,6 +5,7 @@ import '../widgets/book_form.dart';
 import '../widgets/personal_info.dart';
 import '../providers/book_provider.dart';
 import '../providers/auth_provider.dart';
+import '../providers/borrowing_provider.dart';
 
 class BooklistPage extends StatefulWidget {
   BooklistPage({super.key});
@@ -189,32 +190,6 @@ class _BooklistPageState extends State<BooklistPage> {
                         ),
                       ],
                     ),
-                    const SizedBox(height: 20),
-                    Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: Colors.orange.shade100,
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Row(
-                        children: [
-                          Icon(
-                            Icons.info_outline,
-                            color: Colors.orange.shade700,
-                          ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: Text(
-                              'Note: This will be implemented once the backend API endpoint is ready.',
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: Colors.orange.shade700,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
                   ],
                 ),
               ),
@@ -226,19 +201,66 @@ class _BooklistPageState extends State<BooklistPage> {
                   child: const Text('Cancel'),
                 ),
                 TextButton(
-                  onPressed: () {
-                    Navigator.of(context).pop();
-                    // TODO: Implement actual API call when backend endpoint is ready
-                    // Expected endpoint: POST /books/borrow
-                    // Body: { book_id: book['book_id'], due_date: selectedDueDate }
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text(
-                          'Borrow functionality will be available once the backend API endpoint is implemented. See BACKEND_CHANGE_REQUIREMENTS.md for details.',
+                  onPressed: () async {
+                    final bookId = book['book_id'] as int?;
+                    if (bookId == null) {
+                      Navigator.of(context).pop();
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Invalid book ID'),
+                          backgroundColor: Colors.red,
                         ),
-                        duration: Duration(seconds: 5),
+                      );
+                      return;
+                    }
+
+                    Navigator.of(context).pop();
+
+                    // Show loading indicator
+                    showDialog(
+                      context: context,
+                      barrierDismissible: false,
+                      builder: (context) => const Center(
+                        child: CircularProgressIndicator(),
                       ),
                     );
+
+                    // Call API to borrow book
+                    final borrowingProvider = context.read<BorrowingProvider>();
+                    final success = await borrowingProvider.borrowBook(
+                      bookId,
+                      selectedDueDate.toString().split(' ')[0],
+                    );
+
+                    // Close loading dialog
+                    if (context.mounted) {
+                      Navigator.of(context).pop();
+                    }
+
+                    // Show result
+                    if (context.mounted) {
+                      if (success) {
+                        // Refresh book list
+                        await context.read<BookProvider>().getAllBooks();
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(
+                              'Successfully borrowed "${book['title'] ?? 'book'}"',
+                            ),
+                            backgroundColor: Colors.green,
+                          ),
+                        );
+                      } else {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(
+                              borrowingProvider.error ?? 'Failed to borrow book',
+                            ),
+                            backgroundColor: Colors.red,
+                          ),
+                        );
+                      }
+                    }
                   },
                   child: const Text('Borrow'),
                 ),

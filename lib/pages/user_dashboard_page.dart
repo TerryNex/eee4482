@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
 import '../providers/favorite_provider.dart';
+import '../providers/borrowing_provider.dart';
 import '../widgets/navigation_frame.dart';
 import '../widgets/personal_info.dart';
 
@@ -21,35 +22,16 @@ class _UserDashboardPageState extends State<UserDashboardPage> {
   @override
   void initState() {
     super.initState();
-    // Load user's favorite books when dashboard loads
+    // Load user's data when dashboard loads
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final authProvider = context.read<AuthProvider>();
       if (authProvider.isAuthenticated && authProvider.currentUser != null) {
         final userId = authProvider.currentUser!['id'] as int;
         context.read<FavoriteProvider>().getUserFavorites(userId);
+        context.read<BorrowingProvider>().getBorrowingHistory();
       }
     });
   }
-
-  // Sample borrowing history data (TODO: Replace with actual API call when endpoint is available)
-  final List<Map<String, dynamic>> _borrowingHistory = [
-    {
-      'id': 1,
-      'bookTitle': 'Introduction to Flutter',
-      'author': 'John Doe',
-      'borrowedDate': '2025-10-15',
-      'dueDate': '2025-11-15',
-      'status': 'borrowed',
-    },
-    {
-      'id': 2,
-      'bookTitle': 'Advanced Dart Programming',
-      'author': 'Jane Smith',
-      'borrowedDate': '2025-10-01',
-      'returnedDate': '2025-10-28',
-      'status': 'returned',
-    },
-  ];
 
   @override
   Widget build(BuildContext context) {
@@ -88,39 +70,48 @@ class _UserDashboardPageState extends State<UserDashboardPage> {
                   const SizedBox(height: 20),
 
                   // Statistics Cards
-                  Row(
-                    children: [
-                      Expanded(
-                        child: _buildStatCard(
-                          'Books Borrowed',
-                          '${_borrowingHistory.where((b) => b['status'] == 'borrowed').length}',
-                          Icons.book,
-                          Colors.blue,
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: _buildStatCard(
-                          'Total Borrowed',
-                          '${_borrowingHistory.length}',
-                          Icons.history,
-                          Colors.green,
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: Consumer<FavoriteProvider>(
-                          builder: (context, favoriteProvider, child) {
-                            return _buildStatCard(
-                              'Favorited Books',
-                              '${favoriteProvider.favoriteBooks.length}',
-                              Icons.favorite,
-                              Colors.red,
-                            );
-                          },
-                        ),
-                      ),
-                    ],
+                  Consumer<BorrowingProvider>(
+                    builder: (context, borrowingProvider, child) {
+                      final borrowingHistory = borrowingProvider.borrowingHistory;
+                      final currentlyBorrowed = borrowingHistory
+                          .where((b) => b['status'] == 'borrowed')
+                          .length;
+
+                      return Row(
+                        children: [
+                          Expanded(
+                            child: _buildStatCard(
+                              'Books Borrowed',
+                              '$currentlyBorrowed',
+                              Icons.book,
+                              Colors.blue,
+                            ),
+                          ),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: _buildStatCard(
+                              'Total Borrowed',
+                              '${borrowingHistory.length}',
+                              Icons.history,
+                              Colors.green,
+                            ),
+                          ),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: Consumer<FavoriteProvider>(
+                              builder: (context, favoriteProvider, child) {
+                                return _buildStatCard(
+                                  'Favorited Books',
+                                  '${favoriteProvider.favoriteBooks.length}',
+                                  Icons.favorite,
+                                  Colors.red,
+                                );
+                              },
+                            ),
+                          ),
+                        ],
+                      );
+                    },
                   ),
                   const SizedBox(height: 30),
 
@@ -228,37 +219,54 @@ class _UserDashboardPageState extends State<UserDashboardPage> {
   }
 
   Widget _buildBorrowingHistorySection() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    return Consumer<BorrowingProvider>(
+      builder: (context, borrowingProvider, child) {
+        final borrowingHistory = borrowingProvider.borrowingHistory;
+        // Show only first 3 records
+        final displayHistory = borrowingHistory.length > 3
+            ? borrowingHistory.sublist(0, 3)
+            : borrowingHistory;
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'Borrowing History',
-              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text(
+                  'Borrowing History',
+                  style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                ),
+                TextButton.icon(
+                  onPressed: () {
+                    // Navigate to borrowing history page
+                    Navigator.pushNamed(context, '/borrowing-history');
+                  },
+                  icon: const Icon(Icons.arrow_forward),
+                  label: const Text('View All'),
+                ),
+              ],
             ),
-            TextButton.icon(
-              onPressed: () {
-                // Navigate to borrowing history page
-                Navigator.pushNamed(context, '/borrowing-history');
-              },
-              icon: const Icon(Icons.arrow_forward),
-              label: const Text('View All'),
-            ),
+            const SizedBox(height: 16),
+            if (borrowingProvider.isLoading)
+              const Center(
+                child: Padding(
+                  padding: EdgeInsets.all(20),
+                  child: CircularProgressIndicator(),
+                ),
+              )
+            else if (borrowingHistory.isEmpty)
+              const Card(
+                child: Padding(
+                  padding: EdgeInsets.all(40),
+                  child: Center(child: Text('No borrowing history yet')),
+                ),
+              )
+            else
+              ...displayHistory.map((record) => _buildBorrowingCard(record)),
           ],
-        ),
-        const SizedBox(height: 16),
-        if (_borrowingHistory.isEmpty)
-          const Card(
-            child: Padding(
-              padding: EdgeInsets.all(40),
-              child: Center(child: Text('No borrowing history yet')),
-            ),
-          )
-        else
-          ..._borrowingHistory.map((record) => _buildBorrowingCard(record)),
-      ],
+        );
+      },
     );
   }
 
@@ -274,18 +282,18 @@ class _UserDashboardPageState extends State<UserDashboardPage> {
           size: 40,
         ),
         title: Text(
-          record['bookTitle'],
+          record['book_title'] ?? record['bookTitle'] ?? 'Unknown Book',
           style: const TextStyle(fontWeight: FontWeight.bold),
         ),
         subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('by ${record['author']}'),
+            Text('by ${record['authors'] ?? record['author'] ?? 'Unknown'}'),
             const SizedBox(height: 4),
             Text(
               isBorrowed
-                  ? 'Due: ${record['dueDate']}'
-                  : 'Returned: ${record['returnedDate']}',
+                  ? 'Due: ${record['due_date'] ?? record['dueDate'] ?? 'N/A'}'
+                  : 'Returned: ${record['returned_date'] ?? record['returnedDate'] ?? 'N/A'}',
               style: TextStyle(
                 fontSize: 12,
                 color: isBorrowed ? Colors.orange : Colors.green,
