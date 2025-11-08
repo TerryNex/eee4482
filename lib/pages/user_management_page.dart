@@ -415,6 +415,31 @@ class _UserManagementPageState extends State<UserManagementPage> {
 
                 // Update user
                 final userProvider = context.read<UserProvider>();
+                
+                // Get user ID with better error handling
+                int? userId;
+                if (user['user_id'] is int) {
+                  userId = user['user_id'] as int;
+                } else {
+                  userId = int.tryParse(user['user_id']?.toString() ?? '');
+                }
+                
+                if (userId == null) {
+                  // Close loading
+                  if (mounted) Navigator.pop(context);
+                  
+                  // Show error
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Invalid user ID'),
+                        backgroundColor: Colors.red,
+                      ),
+                    );
+                  }
+                  return;
+                }
+                
                 final success = await userProvider.updateUser(
                   int.tryParse(user['user_id']) ?? -1,
                   {'email': emailController.text, 'is_admin': isAdmin ? 1 : 0},

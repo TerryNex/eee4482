@@ -198,7 +198,7 @@ class UserProvider extends ChangeNotifier {
       final path = '/user/delete/$targetUserIdentifier';
       final uri = _buildUri(path);
 
-      final body = {'password': currentPassword};
+      final body = <String, dynamic>{'password': currentPassword};
 
       if (identifierType == 'email') {
         body['email'] = targetUserIdentifier;
