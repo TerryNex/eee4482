@@ -27,11 +27,17 @@ class _LoginPageState extends State<LoginPage> {
   @override
   void initState() {
     super.initState();
-    _checkSavedSession();
+    // Delay checking saved session to allow AuthProvider to load state
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _checkSavedSession();
+    });
   }
 
   /// Check if there's a saved session
   Future<void> _checkSavedSession() async {
+    // Add a small delay to ensure AuthProvider has completed loading
+    await Future.delayed(const Duration(milliseconds: 100));
+    if (!mounted) return;
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
     if (authProvider.isAuthenticated && authProvider.currentUser != null) {
       setState(() {
@@ -183,7 +189,8 @@ class _LoginPageState extends State<LoginPage> {
                                     CircleAvatar(
                                       backgroundColor: Colors.blue,
                                       child: Text(
-                                        (_savedUser!['username'] ?? 'U')[0].toUpperCase(),
+                                        (_savedUser!['username'] ?? 'U')[0]
+                                            .toUpperCase(),
                                         style: const TextStyle(
                                           color: Colors.white,
                                           fontWeight: FontWeight.bold,
@@ -193,7 +200,8 @@ class _LoginPageState extends State<LoginPage> {
                                     const SizedBox(width: 16),
                                     Expanded(
                                       child: Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
                                         children: [
                                           Text(
                                             _savedUser!['username'] ?? 'User',
@@ -231,7 +239,10 @@ class _LoginPageState extends State<LoginPage> {
                                 padding: EdgeInsets.symmetric(horizontal: 16),
                                 child: Text(
                                   'Or login with different account',
-                                  style: TextStyle(fontSize: 12, color: Colors.grey),
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: Colors.grey,
+                                  ),
                                 ),
                               ),
                               Expanded(child: Divider()),
