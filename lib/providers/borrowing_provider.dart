@@ -41,20 +41,20 @@ class BorrowingProvider extends ChangeNotifier {
           .post(
             uri,
             headers: ApiConfig.getAuthorizationHeaders(),
-            body: json.encode({
-              'book_id': bookId,
-              'due_date': dueDate,
-            }),
+            body: json.encode({'book_id': bookId, 'due_date': dueDate}),
           )
           .timeout(const Duration(seconds: 10));
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         // Refresh borrowing history
-        await getBorrowingHistory();
+        // await getBorrowingHistory();
         return true;
       } else {
         final errorData = json.decode(response.body);
-        _error = errorData['message'] ?? errorData['error'] ?? 'Failed to borrow book';
+        _error =
+            errorData['message'] ??
+            errorData['error'] ??
+            'Failed to borrow book';
         notifyListeners();
         return false;
       }
@@ -75,10 +75,7 @@ class BorrowingProvider extends ChangeNotifier {
       final path = '/books/return/$bookId';
       final uri = _buildUri(path);
       final response = await http
-          .put(
-            uri,
-            headers: ApiConfig.getAuthorizationHeaders(),
-          )
+          .put(uri, headers: ApiConfig.getAuthorizationHeaders())
           .timeout(const Duration(seconds: 10));
 
       if (response.statusCode == 200) {
@@ -87,7 +84,10 @@ class BorrowingProvider extends ChangeNotifier {
         return true;
       } else {
         final errorData = json.decode(response.body);
-        _error = errorData['message'] ?? errorData['error'] ?? 'Failed to return book';
+        _error =
+            errorData['message'] ??
+            errorData['error'] ??
+            'Failed to return book';
         notifyListeners();
         return false;
       }
@@ -115,7 +115,7 @@ class BorrowingProvider extends ChangeNotifier {
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         List<Map<String, dynamic>> rawHistory = [];
-        
+
         if (data is List) {
           rawHistory = List<Map<String, dynamic>>.from(data);
         } else if (data is Map && data.containsKey('data')) {
@@ -134,7 +134,7 @@ class BorrowingProvider extends ChangeNotifier {
               final bookResponse = await http
                   .get(bookUri, headers: ApiConfig.getAuthorizationHeaders())
                   .timeout(const Duration(seconds: 10));
-              
+
               if (bookResponse.statusCode == 200) {
                 final books = json.decode(bookResponse.body);
                 if (books is List) {
@@ -142,7 +142,7 @@ class BorrowingProvider extends ChangeNotifier {
                     (b) => b['book_id'].toString() == bookId.toString(),
                     orElse: () => null,
                   );
-                  
+
                   if (book != null) {
                     // Merge book details with borrowing record
                     record['book_title'] = book['title'];

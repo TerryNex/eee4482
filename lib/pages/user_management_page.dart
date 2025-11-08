@@ -40,7 +40,9 @@ class _UserManagementPageState extends State<UserManagementPage> {
             Navigator.pushReplacementNamed(context, '/home');
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(
-                content: Text('User Management is only accessible to administrators'),
+                content: Text(
+                  'User Management is only accessible to administrators',
+                ),
                 backgroundColor: Colors.red,
               ),
             );
@@ -326,9 +328,8 @@ class _UserManagementPageState extends State<UserManagementPage> {
                 showDialog(
                   context: context,
                   barrierDismissible: false,
-                  builder: (context) => const Center(
-                    child: CircularProgressIndicator(),
-                  ),
+                  builder: (context) =>
+                      const Center(child: CircularProgressIndicator()),
                 );
 
                 // Add user
@@ -340,9 +341,8 @@ class _UserManagementPageState extends State<UserManagementPage> {
                   'is_admin': isAdmin ? 1 : 0,
                 });
 
-                // Close loading
+                //  Close loading
                 if (mounted) Navigator.pop(context);
-
                 // Show result
                 if (mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
@@ -409,9 +409,8 @@ class _UserManagementPageState extends State<UserManagementPage> {
                 showDialog(
                   context: context,
                   barrierDismissible: false,
-                  builder: (context) => const Center(
-                    child: CircularProgressIndicator(),
-                  ),
+                  builder: (context) =>
+                      const Center(child: CircularProgressIndicator()),
                 );
 
                 // Update user
@@ -442,11 +441,8 @@ class _UserManagementPageState extends State<UserManagementPage> {
                 }
                 
                 final success = await userProvider.updateUser(
-                  userId,
-                  {
-                    'email': emailController.text,
-                    'is_admin': isAdmin ? 1 : 0,
-                  },
+                  int.tryParse(user['user_id']) ?? -1,
+                  {'email': emailController.text, 'is_admin': isAdmin ? 1 : 0},
                 );
 
                 // Close loading
@@ -506,9 +502,7 @@ class _UserManagementPageState extends State<UserManagementPage> {
             child: const Text('Cancel'),
           ),
           ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red,
-            ),
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
             onPressed: () async {
               if (passwordController.text.isEmpty) {
                 ScaffoldMessenger.of(context).showSnackBar(
@@ -526,41 +520,16 @@ class _UserManagementPageState extends State<UserManagementPage> {
               showDialog(
                 context: context,
                 barrierDismissible: false,
-                builder: (context) => const Center(
-                  child: CircularProgressIndicator(),
-                ),
+                builder: (context) =>
+                    const Center(child: CircularProgressIndicator()),
               );
 
               // Delete user
               final authProvider = context.read<AuthProvider>();
               final userProvider = context.read<UserProvider>();
-              
-              // Get current user ID with better error handling
-              int? currentUserId;
-              if (authProvider.currentUser?['id'] is int) {
-                currentUserId = authProvider.currentUser?['id'] as int;
-              } else {
-                currentUserId = int.tryParse(authProvider.currentUser?['id']?.toString() ?? '');
-              }
-              
-              if (currentUserId == null) {
-                // Close loading
-                if (mounted) Navigator.pop(context);
-                
-                // Show error
-                if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Unable to determine current user ID'),
-                      backgroundColor: Colors.red,
-                    ),
-                  );
-                }
-                return;
-              }
-              
-              final targetUserId = user['user_id'].toString();
-              
+              final currentUserId = authProvider.currentUser?['id'] as int;
+              final targetUserId = user['user_id'];
+
               final success = await userProvider.deleteUser(
                 currentUserId,
                 passwordController.text,

@@ -36,6 +36,13 @@ class UserProvider extends ChangeNotifier {
       _error = null;
       notifyListeners();
 
+      Future.delayed(const Duration(seconds: 5), () {
+        if (_isLoading) {
+          _isLoading = false;
+          notifyListeners();
+        }
+      });
+
       final path = '/user/all';
       final uri = _buildUri(path);
       final response = await http
@@ -79,6 +86,13 @@ class UserProvider extends ChangeNotifier {
       _error = null;
       notifyListeners();
 
+      Future.delayed(const Duration(seconds: 5), () {
+        if (_isLoading) {
+          _isLoading = false;
+          notifyListeners();
+        }
+      });
+
       final path = '/user/add';
       final uri = _buildUri(path);
       final response = await http
@@ -87,11 +101,12 @@ class UserProvider extends ChangeNotifier {
             headers: ApiConfig.getAuthorizationHeaders(),
             body: json.encode(userData),
           )
-          .timeout(const Duration(seconds: 10));
+          .timeout(const Duration(seconds: 3));
 
       if (response.statusCode == 200) {
         _isLoading = false;
         notifyListeners();
+        await getAllUsers();
         return true;
       } else {
         final errorData = json.decode(response.body);
@@ -115,7 +130,12 @@ class UserProvider extends ChangeNotifier {
       _isLoading = true;
       _error = null;
       notifyListeners();
-
+      Future.delayed(const Duration(seconds: 5), () {
+        if (_isLoading) {
+          _isLoading = false;
+          notifyListeners();
+        }
+      });
       final path = '/user/update/$userId';
       final uri = _buildUri(path);
       final response = await http
@@ -129,6 +149,7 @@ class UserProvider extends ChangeNotifier {
       if (response.statusCode == 200) {
         _isLoading = false;
         notifyListeners();
+        await getAllUsers();
         return true;
       } else if (response.statusCode == 401) {
         _error = 'Password is incorrect';
@@ -167,8 +188,14 @@ class UserProvider extends ChangeNotifier {
       _isLoading = true;
       _error = null;
       notifyListeners();
-
-      final path = '/user/delete/$userId';
+      Future.delayed(const Duration(seconds: 5), () {
+        if (_isLoading) {
+          _isLoading = false;
+          notifyListeners();
+        }
+      });
+      // final path = '/user/delete/$userId';
+      final path = '/user/delete/$targetUserIdentifier';
       final uri = _buildUri(path);
 
       final body = <String, dynamic>{'password': currentPassword};
@@ -178,7 +205,7 @@ class UserProvider extends ChangeNotifier {
       } else if (identifierType == 'username') {
         body['username'] = targetUserIdentifier;
       } else {
-        body['user_id_delete'] = int.tryParse(targetUserIdentifier) ?? 0;
+        body['user_id_delete'] = targetUserIdentifier;
       }
 
       final response = await http
@@ -191,7 +218,7 @@ class UserProvider extends ChangeNotifier {
 
       if (response.statusCode == 200) {
         _isLoading = false;
-        // Refresh users list if showing admin panel
+        notifyListeners();
         await getAllUsers();
         return true;
       } else if (response.statusCode == 401) {
