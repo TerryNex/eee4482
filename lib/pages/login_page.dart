@@ -27,11 +27,19 @@ class _LoginPageState extends State<LoginPage> {
   @override
   void initState() {
     super.initState();
-    _checkSavedSession();
+    // Delay checking saved session to allow AuthProvider to load state
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _checkSavedSession();
+    });
   }
 
   /// Check if there's a saved session
   Future<void> _checkSavedSession() async {
+    // Add a small delay to ensure AuthProvider has completed loading
+    await Future.delayed(const Duration(milliseconds: 100));
+    
+    if (!mounted) return;
+    
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
     if (authProvider.isAuthenticated && authProvider.currentUser != null) {
       setState(() {
